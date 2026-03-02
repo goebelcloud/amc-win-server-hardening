@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "displayName": "Azure VM prerequisites for Machine Configuration (system identity + extension) + required UAMI for package access",
+    "policyType": "Custom",
+    "description": "Initiative that prepares Azure Windows VMs for Machine Configuration by enabling system-assigned managed identity, deploying the Machine Configuration extension, and attaching a required user-assigned managed identity (UAMI) used to download packages from private storage.",
+    "metadata": {
+      "category": "Guest Configuration",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "userAssignedIdentityResourceId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Required UAMI resource ID",
+          "description": "User-assigned managed identity that VMs must have for Machine Configuration package download (contentManagedIdentity)."
+        }
+      }
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/3cf2ab00-13f1-4d0c-8971-2ac904541a7e",
+        "definitionVersion": "4.*.*",
+        "policyDefinitionReferenceId": "Prerequisite_AddSystemIdentityWhenNone"
+      },
+      {
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/497dff13-db2a-4c0f-8603-28fa3b331ab6",
+        "definitionVersion": "4.*.*",
+        "policyDefinitionReferenceId": "Prerequisite_AddSystemIdentityWhenUser"
+      },
+      {
+        "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/385f5831-96d4-41db-9a3c-cd3af78aaae6",
+        "definitionVersion": "1.*.*",
+        "policyDefinitionReferenceId": "Prerequisite_DeployMachineConfigurationExtension_Windows"
+      },
+      {
+        "policyDefinitionId": "__CUSTOM_POLICY_DEFINITION_ID_ENFORCE_UAMI__",
+        "policyDefinitionReferenceId": "Prerequisite_AddRequiredUAMI",
+        "parameters": {
+          "userAssignedIdentityResourceId": {
+            "value": "[parameters('userAssignedIdentityResourceId')]"
+          }
+        }
+      }
+    ]
+  }
+}

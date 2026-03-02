@@ -1,0 +1,26 @@
+<#
+File: Configuration.ps1
+Package: win-server-FW-001 - Enable firewall for all profiles
+Purpose: Configures Windows Defender Firewall settings for: Enable firewall for all profiles.
+Version: 1.0.0
+#>
+
+Configuration FW_001_Enable_firewall_for_all_profiles {
+    Import-DscResource -ModuleName PSDscResources
+
+    Node "localhost" {
+        Script FW_001 {
+            GetScript  = {
+                return @{ Result = (Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json -Compress) }
+            }
+            TestScript = {
+                $profiles = Get-NetFirewallProfile -ErrorAction SilentlyContinue
+                if (-not $profiles) { return $false }
+                return (($profiles | Where-Object { $_.Enabled -ne $true }).Count -eq 0)
+            }
+            SetScript  = {
+                Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled $true | Out-Null
+            }
+        }
+    }
+}

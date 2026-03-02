@@ -1,0 +1,59 @@
+{
+  "properties": {
+    "displayName": "Add required user-assigned managed identity (UAMI) to Azure VMs (Machine Configuration package access)",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Adds a specified user-assigned managed identity to Azure virtual machines. Intended as a prerequisite for Machine Configuration packages that download content from private Azure Storage using contentManagedIdentity.",
+    "metadata": {
+      "category": "Guest Configuration",
+      "version": "1.0.0"
+    },
+    "parameters": {
+      "userAssignedIdentityResourceId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "User-assigned managed identity resource ID",
+          "description": "Resource ID of the user-assigned managed identity to attach to the VM."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Compute/virtualMachines"
+          },
+          {
+            "value": "[requestContext().apiVersion]",
+            "greaterOrEquals": "2018-10-01"
+          },
+          {
+            "field": "identity.userAssignedIdentities",
+            "notContainsKey": "[parameters('userAssignedIdentityResourceId')]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "modify",
+        "details": {
+          "roleDefinitionIds": [
+            "/providers/microsoft.authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+          ],
+          "operations": [
+            {
+              "operation": "AddOrReplace",
+              "field": "identity.type",
+              "value": "[if(contains(field('identity.type'), 'SystemAssigned'), 'SystemAssigned,UserAssigned', 'UserAssigned')]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "identity.userAssignedIdentities",
+              "value": "[createObject(parameters('userAssignedIdentityResourceId'), createObject())]"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
