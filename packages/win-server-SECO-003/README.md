@@ -8,21 +8,20 @@ This package **audits only** whether the built-in local Administrator account (R
 
 This package does **not** rename any accounts.
 
-## How to evaluate on the VM (built-in tools)
+## How to verify the setting is applied (built-in OS tools)
 
-### PowerShell (recommended)
+### GUI verification
+1. Open **Computer Management** (`compmgmt.msc`) or **Local Users and Groups** (`lusrmgr.msc`) (if available).
+2. Go to **Local Users and Groups** > **Users**.
+3. Identify the built-in Administrator account (RID 500).
+4. Confirm the account name is **not** `Administrator`.
+
+### Command-line verification
+**Local Administrator (RID 500) name check (PowerShell)**
 ```powershell
-Get-CimInstance Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE 'S-1-5-21-%-500'" |
-  Select-Object Name, SID, Disabled
+Get-CimInstance Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE 'S-1-5-21-%-500'" | Select-Object Name, SID, Disabled
 ```
-
-On Windows Server 2012+ you can also use:
-```powershell
-Get-LocalUser | Where-Object SID -like "S-1-5-21-*-500" | Select-Object Name, SID, Enabled
-```
-
-### Expected result
-- `Name` should **not** be `Administrator`.
+Expected: `Name` is not `Administrator`.
 
 ## Build this package standalone
 1. Ensure required authoring modules are installed on the build machine:

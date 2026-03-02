@@ -10,17 +10,19 @@
 ## What this package changes
 - `auditpol` category `Account Logon`: success=True, failure=True
 
-## How to evaluate the setting (built-in OS tools)
-**Audit policy**
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Advanced Audit Policy Configuration**.
+3. Open **Audit Account Logon (Success/Failure)** and confirm it is set to **Enable Success and Failure**.
+
+### Command-line verification
+**Advanced audit policy check (auditpol.exe)**
 ```cmd
 auditpol /get /category:"Account Logon"
 ```
-
-## Manual remediation (built-in OS tools)
-Apply via:
-```cmd
-auditpol /set /category:"Account Logon" /success:enable /failure:enable
-```
+Verify the output shows the expected Success/Failure configuration for the relevant subcategory.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -29,7 +31,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `AUD_001_Audit_Account_Logon_Success_Failure`
@@ -58,7 +59,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -67,7 +67,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -82,8 +81,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

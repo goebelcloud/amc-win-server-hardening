@@ -13,16 +13,19 @@ Reduces SMB man-in-the-middle tampering by requiring SMB signing on the client; 
 ## What this package changes
 - (No registry entries parsed from Configuration.ps1. Review configuration for details.)
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
-# (No registry entries parsed from Configuration.ps1.)
-```
+## How to verify the setting is applied (built-in OS tools)
 
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Microsoft network client: Digitally sign communications (always)`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Microsoft network client: Digitally sign communications (always)** and confirm it is set to **Enabled (SMB signing required for outbound SMB client traffic)**.
+
+### Command-line verification
+**SMB configuration check (PowerShell)**
+```powershell
+Get-SmbClientConfiguration | Select-Object RequireSecuritySignature, EnableSecuritySignature
+```
+Expected: `RequireSecuritySignature` is `True`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

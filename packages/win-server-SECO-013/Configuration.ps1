@@ -5,6 +5,15 @@ Purpose: Enforces 'Microsoft network server: Digitally sign communications (alwa
 Version: 1.0.0
 #>
 
+# win-server-SECO-013: Microsoft network server: Digitally sign communications (always)
+# This DSC configuration targets the local security policy setting:
+#   Local Policies\Security Options -> Microsoft network server: Digitally sign communications (always) = Enabled (SMB signing required for inbound SMB server traffic)
+# Expected impact: Medium (legacy/non-signing SMB clients)
+#
+# Implementation notes:
+#   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
+#   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
+
 Configuration SECO_013_Microsoft_network_server_Digitally_sign_communicati {
     Import-DscResource -ModuleName PSDscResources
 

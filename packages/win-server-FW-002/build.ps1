@@ -77,6 +77,19 @@ $settingPath  = "Windows Defender Firewall with Advanced Security"
 $settingSuggestedValue = "Log dropped packets = Yes; Log successful connections = (Optional); Log size >= 16,384 KB"
 
 
+
+# Detailed build steps for win-server-FW-002 (Enable firewall logging):
+#   1) Read repository configuration (packages/machine-configuration.config.json) to resolve output folders and defaults.
+#      - PolicyMode controls the default remediation behavior in the generated *baseline* policy (if generated).
+#      - ContentUriBase and RequiredUamiResourceId are used only when generating baseline policy JSON.
+#   2) Compile the DSC configuration 'FW_002_Enable_firewall_logging' to produce a node MOF for localhost.
+#      - Most common output: <MofOutputPath>\localhost.mof
+#   3) Create the Machine Configuration package ZIP 'win-server-FW-002.zip' using New-GuestConfigurationPackage.
+#      - The ZIP includes the compiled MOF plus any DSC resource modules referenced by Configuration.ps1.
+#      - Those modules must be installed on the authoring VM; they are shipped in the ZIP so the target VM does not need preinstalled DSC modules.
+#   4) If ContentUriBase and RequiredUamiResourceId are configured (not placeholders), generate baseline Azure Policy JSON via New-GuestConfigurationPolicy
+#      with a readable display name/description for humans:
+#        - Windows Defender Firewall with Advanced Security -> Enable firewall logging = Log dropped packets = Yes; Log successful connections = (Optional); Log size >= 16,384 KB
 # Load repository config
 $configPath = Find-RepositoryConfig -StartDirectory $packageRoot
 $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
@@ -210,6 +223,13 @@ if ($placeholdersPresent) {
   $contentUri = ("{0}/{1}.zip" -f $ContentUriBase.TrimEnd("/"), $controlId)
   $policyId = (New-Guid).Guid
 
+  # Capture existing JSON files so we can identify which one(s) New-GuestConfigurationPolicy created.
+  $policyJsonBefore = @()
+  if (Test-Path $policyOutputPath) {
+    $policyJsonBefore = Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty FullName
+  }
+
   New-GuestConfigurationPolicy `
     -PolicyId $policyId `
     -ContentUri $contentUri `
@@ -222,6 +242,30 @@ if ($placeholdersPresent) {
     -LocalContentPath $expectedZipPath `
     -ManagedIdentityResourceId $UserAssignedIdentityResourceId `
     -ExcludeArcMachines | Out-Null
+
+  # Azure Portal note:
+  # - When you paste JSON into the Portal "JSON" editor for a policy definition, the Portal expects the *properties object*
+  #   (displayName/mode/metadata/parameters/policyRule) and wraps it in "properties" itself.
+  # - New-GuestConfigurationPolicy writes a full policy definition JSON (with an outer "properties" wrapper).
+  # - Therefore we also emit a *.portal.json variant that contains only the inner properties object.
+  $policyJsonAfter = Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty FullName
+  $createdPolicyJson = $policyJsonAfter | Where-Object { $policyJsonBefore -notcontains $_ }
+  if (-not $createdPolicyJson) {
+    # Fallback: take the newest JSON in the output folder
+    $createdPolicyJson = @(Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Select-Object -ExpandProperty FullName)
+  }
+
+  foreach ($jsonPath in $createdPolicyJson) {
+    try {
+      $policyObject = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json -Depth 100
+      $propertiesObject = if ($policyObject.PSObject.Properties.Name -contains "properties") { $policyObject.properties } else { $policyObject }
+      $portalPath = ($jsonPath -replace "\.json$", ".portal.json")
+      ($propertiesObject | ConvertTo-Json -Depth 100) | Set-Content -Path $portalPath -Encoding UTF8
+    } catch {
+      Write-Warning ("Failed to create portal-friendly JSON variant for: {0}. Error: {1}" -f $jsonPath, $_.Exception.Message)
+    }
+  }
 }
 
 Write-Host "Build completed." -ForegroundColor Green

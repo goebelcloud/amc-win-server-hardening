@@ -35,6 +35,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Finds the nearest 'packages/machine-configuration.config.json' by walking up the directory tree.
+# This allows running the script from repo root or any subfolder.
+
 function Find-RepositoryConfig {
   param([string]$StartDirectory)
 
@@ -73,9 +76,19 @@ if (-not $RequiredUamiResourceId -or $RequiredUamiResourceId -like "*/subscripti
 $packagesRootFullPath = (Resolve-Path $PackagesRootPath).Path
 Write-Host ("Hydrating policies for packages under: {0}" -f $packagesRootFullPath) -ForegroundColor Cyan
 
+# Package discovery:
+# We treat any directory that contains a hydrate-policy.ps1 as a package folder.
+# The package folder name is the ControlId (for example: win-server-ACCT-001).
+
 $packageFolders = Get-ChildItem -Path $packagesRootFullPath -Directory |
   Where-Object { Test-Path (Join-Path $_.FullName "hydrate-policy.ps1") } |
   Sort-Object Name
+
+# Hydration loop:
+# For each package we call its hydrate-policy.ps1, which:
+#   - reads policy/deployIfNotExists.enhanced.sample.json
+#   - injects contentUri/contentHash/UAMI into metadata.guestConfiguration
+#   - writes deployIfNotExists.enhanced.json to the configured PolicyOutputRoot
 
 foreach ($pkg in $packageFolders) {
   $hydrateScript = Join-Path $pkg.FullName "hydrate-policy.ps1"

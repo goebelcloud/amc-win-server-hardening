@@ -9,15 +9,19 @@
 
 ## What this package changes
 
+## How to verify the setting is applied (built-in OS tools)
 
-## How to evaluate the setting (built-in OS tools)
-**Firewall profiles**
+### GUI verification
+1. Press **Win+R**, run `wf.msc` (Windows Defender Firewall with Advanced Security).
+2. Click **Windows Defender Firewall Properties**.
+3. Confirm the package expectation is met for the relevant profiles: **Enabled (Domain/Private/Public) + default inbound = Block**.
+
+### Command-line verification
+**Firewall profile check (PowerShell)**
 ```powershell
-Get-NetFirewallProfile | Select Name, Enabled, LogAllowed, LogBlocked, LogMaxSizeKilobytes, LogFileName
+Get-NetFirewallProfile | Select-Object Name, Enabled, LogBlocked, LogAllowed, LogMaxSizeKilobytes, LogFileName
 ```
-
-## Manual remediation (built-in OS tools)
-Apply via `Set-NetFirewallProfile`.
+Verify the properties match the recommended values for all profiles.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -26,7 +30,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `FW_001_Enable_firewall_for_all_profiles`
@@ -55,7 +58,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -64,7 +66,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -79,8 +80,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

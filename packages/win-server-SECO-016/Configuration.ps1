@@ -5,6 +5,15 @@ Purpose: Enforces 'Interactive logon: Machine inactivity limit' by setting HKLM:
 Version: 1.0.0
 #>
 
+# win-server-SECO-016: Interactive logon: Machine inactivity limit
+# This DSC configuration targets the local security policy setting:
+#   Local Policies\Security Options -> Interactive logon: Machine inactivity limit = 900 seconds (15 minutes)
+# Expected impact: Low
+#
+# Implementation notes:
+#   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
+#   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
+
 Configuration SECO_016_Interactive_logon_Machine_inactivity_limit {
     Import-DscResource -ModuleName PSDscResources
 

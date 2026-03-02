@@ -9,18 +9,20 @@
 
 ## What this package changes
 
+## How to verify the setting is applied (built-in OS tools)
 
-## How to evaluate the setting (built-in OS tools)
-**Event log size**
+### GUI verification
+1. Press **Win+R**, run `eventvwr.msc` (Event Viewer).
+2. Go to **Windows Logs** > **Security**.
+3. Right-click **Security** > **Properties**.
+4. Confirm **Maximum log size** matches the recommendation (**>= 196,608 KB (192 MB) (tune for environment)**).
+
+### Command-line verification
+**Event Log check (wevtutil.exe)**
 ```cmd
 wevtutil gl Security
 ```
-
-## Manual remediation (built-in OS tools)
-Apply via:
-```cmd
-wevtutil sl Security /ms:201326592
-```
+Verify `maxSize` is at or above the recommended value.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -29,7 +31,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `LOG_002_Increase_Security_log_maximum_size`
@@ -58,7 +59,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -67,7 +67,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -82,8 +81,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

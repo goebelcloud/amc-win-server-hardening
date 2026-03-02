@@ -13,16 +13,19 @@ Forces stronger NTLMv2 authentication and reduces exposure to legacy LM/NTLM wea
 ## What this package changes
 - Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\LmCompatibilityLevel` (DWord) = `5`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Network security: LAN Manager authentication level** and confirm it is set to **Send NTLMv2 response only. Refuse LM & NTLM**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LmCompatibilityLevel
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Network security: LAN Manager authentication level`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `LmCompatibilityLevel` (DWord) = `5`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

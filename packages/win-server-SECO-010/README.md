@@ -13,16 +13,19 @@ Hardens NTLM session protection (signing/encryption) to reduce MITM and downgrad
 ## What this package changes
 - Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0\NtlmMinClientSec` (DWord) = `537395200`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Network security: Minimum session security for NTLM SSP based (including secure RPC) clients** and confirm it is set to **Require NTLMv2 session security; Require 128-bit encryption**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" /v NtlmMinClientSec
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Network security: Minimum session security for NTLM SSP based (including secure RPC) clients`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `NtlmMinClientSec` (DWord) = `537395200`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

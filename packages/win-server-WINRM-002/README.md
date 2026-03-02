@@ -10,14 +10,19 @@
 ## What this package changes
 - Registry: `HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service\Auth\Basic` (DWORD) = `0`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `gpedit.msc` (Local Group Policy Editor).
+2. Navigate to: **Windows Components > Windows Remote Management (WinRM) > WinRM Service**.
+3. Open **Disallow Basic authentication** and confirm it is set to **Basic = Disabled (use Kerberos/cert)**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service\Auth" /v Basic
 ```
-
-## Manual remediation (built-in OS tools)
-Set the value(s) using `reg add` or Local Group Policy (if the key is policy-backed).
+Expected: `Basic` (DWord) = `0`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -26,7 +31,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `WINRM_002_Disallow_Basic_authentication`
@@ -55,7 +59,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -64,7 +67,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -79,8 +81,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

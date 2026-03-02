@@ -13,16 +13,19 @@ Reduces credential theft by ensuring users enter credentials on the secure atten
 ## What this package changes
 - Registry: `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\DisableCAD` (DWord) = `0`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Interactive logon: Do not require CTRL+ALT+DEL** and confirm it is set to **Disabled (require CTRL+ALT+DEL)**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v DisableCAD
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Interactive logon: Do not require CTRL+ALT+DEL`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `DisableCAD` (DWord) = `0`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

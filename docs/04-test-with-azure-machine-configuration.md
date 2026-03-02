@@ -6,6 +6,25 @@ It assumes:
 - You can upload package ZIPs to a storage location reachable by the VM.
 - A **User Assigned Managed Identity (UAMI)** is used for package access.
 - You will import policy JSON via the Azure Portal (or automation outside this repo).
+## Azure Portal JSON format: use *.portal.json
+
+Azure Portal has two common ways to create policy definitions:
+
+1. **Create definition (UI fields + JSON editor)**  
+   The Portal JSON editor expects the **PolicyDefinitionProperties object** (displayName/mode/metadata/parameters/policyRule), **not** a full wrapper with `{ "properties": { ... } }`.
+
+   Use the `*.portal.json` files created by the scripts in this repo.
+
+2. **Automation / REST**  
+   Many automation paths accept the full `{ "properties": { ... } }` wrapper.
+
+This repo therefore writes **two variants** when you build/hydrate policies:
+
+- `deployIfNotExists.enhanced.json` (full wrapper)
+- `deployIfNotExists.enhanced.portal.json` (properties-only, for Azure Portal JSON editor)
+
+If you also generate the baseline policy via `New-GuestConfigurationPolicy` during `build.ps1`, a corresponding `*.portal.json` file is written next to the generated JSON.
+
 
 > Note: The enhanced policy templates in this repo include an additional scope filter that targets **Windows Server** images using the Azure Policy aliases `Microsoft.Compute/imageOffer` and `Microsoft.Compute/imageSKU`.
 > This matches typical Azure Marketplace Windows Server images (Offer `WindowsServer*` with SKU `2016*`, `2019*`, `2022*`, `2025*`) and common Windows Server-based offers containing `WS2016`, `WS2019`, `WS2022`, or `WS2025`.

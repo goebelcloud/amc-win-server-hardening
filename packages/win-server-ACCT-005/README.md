@@ -10,18 +10,19 @@
 ## What this package changes
 - Local Security Policy export (`secedit`) key `PasswordComplexity` = `1` in `[System Access]`
 
-## How to evaluate the setting (built-in OS tools)
-**Export and inspect local security policy**
-```cmd
-secedit /export /cfg %TEMP%\win-server-ACCT-005-export.inf
-findstr /i "^PasswordComplexity" %TEMP%\win-server-ACCT-005-export.inf
-```
+## How to verify the setting is applied (built-in OS tools)
 
-## Manual remediation (built-in OS tools)
-Apply via security template:
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Account Policies > Password Policy**.
+3. Open **Password must meet complexity requirements** and confirm it is set to **Enabled**.
+
+### Command-line verification
+**Account policy check (net.exe)**
 ```cmd
-secedit /configure /db %TEMP%\secedit.sdb /cfg <your.inf> /areas SECURITYPOLICY
+net accounts
 ```
+Verify the relevant line matches the recommended value (e.g., password history / length / lockout settings).
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -30,7 +31,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `ACCT_005_Password_must_meet_complexity_requirements`
@@ -59,7 +59,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -68,7 +67,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -83,8 +81,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

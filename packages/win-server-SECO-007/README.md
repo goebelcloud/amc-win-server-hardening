@@ -13,16 +13,19 @@ Prevents anonymous users from receiving 'Everyone' permissions on resources.
 ## What this package changes
 - Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\EveryoneIncludesAnonymous` (DWord) = `0`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Network access: Let Everyone permissions apply to anonymous users** and confirm it is set to **Disabled**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v EveryoneIncludesAnonymous
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Network access: Let Everyone permissions apply to anonymous users`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `EveryoneIncludesAnonymous` (DWord) = `0`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   For each package folder under:
-    .\packages\<ControlId>__<package-name>\
+    .\packages\<ControlId>\
   this script locates the expected ZIP in the configured output folder and runs a local package validation.
 
   Validation uses the GuestConfiguration module cmdlet:
@@ -27,6 +27,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Finds the nearest 'packages/machine-configuration.config.json' by walking up the directory tree.
+# This ensures we always read the same OutputPaths used during build.
 
 function Find-RepositoryConfig {
   param([string]$StartDirectory)
@@ -70,10 +73,19 @@ if (-not (Get-Module -ListAvailable -Name "GuestConfiguration")) {
   throw "GuestConfiguration module not found. Run authoring-workstation\install-required-modules.ps1 on the authoring machine."
 }
 
+# Package discovery:
+# We treat any directory that contains a build.ps1 as a package folder.
+# The folder name is the ControlId (for example: win-server-ACCT-001).
+
 $packageFolders = Get-ChildItem -Path $packagesRoot -Directory |
   Where-Object { Test-Path (Join-Path $_.FullName "build.ps1") }
 
 $failed = 0
+
+# Validation loop:
+# This performs a local 'package compliance evaluation' using the GuestConfiguration module.
+# It validates that the ZIP is structurally correct and that the compiled MOF/resources are usable.
+# Azure is not required for this step; it's a fast authoring-time sanity check.
 
 foreach ($pkg in $packageFolders) {
   $folderName = $pkg.Name

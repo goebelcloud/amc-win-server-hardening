@@ -5,6 +5,15 @@ Purpose: Hardens SMB configuration for: Disable SMBv1 Client and Server.
 Version: 1.0.0
 #>
 
+# win-server-NET-001: Disable SMBv1 (Client and Server)
+# This DSC configuration targets the local security policy setting:
+#   SMB -> Disable SMBv1 (Client and Server) = Disable/remove SMBv1
+# Expected impact: Medium (legacy SMB clients)
+#
+# Implementation notes:
+#   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
+#   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
+
 Configuration NET_001_Disable_SMBv1_Client_and_Server {
     Import-DscResource -ModuleName PSDscResources
 

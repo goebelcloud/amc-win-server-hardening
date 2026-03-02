@@ -9,21 +9,20 @@
 
 ## What this package changes
 
+## How to verify the setting is applied (built-in OS tools)
 
-## How to evaluate the setting (built-in OS tools)
-**SMB1 status**
-```powershell
-Get-SmbServerConfiguration | Select EnableSMB1Protocol
-Get-SmbClientConfiguration | Select EnableSMB1Protocol
-```
-Optional feature check:
-```powershell
-Get-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
-Get-WindowsFeature FS-SMB1
-```
+### GUI verification
+1. (Optional) Open **Windows Features** (`OptionalFeatures.exe`) or **Server Manager** > **Remove Roles and Features**.
+2. Locate **SMB 1.0/CIFS File Sharing Support** / **FS-SMB1**.
+3. Confirm SMBv1 is **disabled/uninstalled**.
 
-## Manual remediation (built-in OS tools)
-Disable via `Set-SmbServerConfiguration`, `Set-SmbClientConfiguration`, and remove/disable SMB1 feature.
+### Command-line verification
+**SMB configuration check (PowerShell)**
+```powershell
+Get-SmbServerConfiguration | Select-Object EnableSMB1Protocol
+Get-SmbClientConfiguration | Select-Object EnableSMB1Protocol
+```
+Expected: `EnableSMB1Protocol` is `False` for both server and client.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -32,7 +31,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `NET_001_Disable_SMBv1_Client_and_Server`
@@ -61,7 +59,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -70,7 +67,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -85,8 +81,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

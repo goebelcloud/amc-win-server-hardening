@@ -76,6 +76,16 @@ $settingSuggestedValue = "Enabled (Domain/Private/Public) + default inbound = Bl
 
 
 
+
+# Detailed hydration steps for win-server-FW-001 (Enable firewall for all profiles):
+#   1) Locate the built package ZIP in the configured PackageZipOutputRoot and calculate SHA256 (contentHash).
+#   2) Build the contentUri: <ContentUriBase>/win-server-FW-001.zip
+#   3) Replace placeholders in policy/deployIfNotExists.enhanced.sample.json:
+#        __CONTENT_URI__      -> resolved contentUri
+#        __CONTENT_HASH__     -> computed SHA256 hash
+#        __UAMI_RESOURCE_ID__ -> RequiredUamiResourceId (used by Machine Configuration to download the ZIP from storage)
+#   4) Write the hydrated enhanced policy JSON to the configured PolicyOutputRoot (never into the package folder).
+#   5) Azure Policy parameters (effect, assignmentType, requiredUserAssignedIdentityResourceId) remain parameters so Terraform can set them at assignment time.
 if (-not $ContentUriBase) { $ContentUriBase = $config.ContentUriBase }
 if (-not $RequiredUamiResourceId) { $RequiredUamiResourceId = $config.RequiredUamiResourceId }
 
@@ -127,9 +137,16 @@ $outPolicyFolder = Join-Path $policyOutputRoot $outFolder
 New-Item -Path $outPolicyFolder -ItemType Directory -Force | Out-Null
 
 $outPath = Join-Path $outPolicyFolder "deployIfNotExists.enhanced.json"
+$outPortalPath = ($outPath -replace "\.json$", ".portal.json")
+
+# Azure Portal note:
+# - When you paste JSON into the Portal "JSON" editor for a policy definition, the Portal expects the *properties object*
+#   (displayName/mode/metadata/parameters/policyRule) and wraps it in "properties" itself.
+# - Therefore we emit a second file without the outer { "properties": { ... } } wrapper.
 $templateObject = $templateJson | ConvertFrom-Json -Depth 50
 $templateObject.properties.displayName = ("{0} - {1} (Machine Configuration)" -f $policyDisplayId, $settingTitle)
 ($templateObject | ConvertTo-Json -Depth 50) | Set-Content -Path $outPath -Encoding UTF8
+($templateObject.properties | ConvertTo-Json -Depth 50) | Set-Content -Path $outPortalPath -Encoding UTF8
 
 Write-Host ("Hydrated policy written: {0}" -f $outPath) -ForegroundColor Green
 Write-Host ("contentUri:  {0}" -f $contentUri)

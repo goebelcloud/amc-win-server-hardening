@@ -5,6 +5,15 @@ Purpose: Configures Windows Event Log settings for: Increase Security log maximu
 Version: 1.0.0
 #>
 
+# win-server-LOG-002: Increase Security log maximum size
+# This DSC configuration targets the local security policy setting:
+#   Event Logs -> Increase Security log maximum size = >= 196,608 KB (192 MB) (tune for environment)
+# Expected impact: Low
+#
+# Implementation notes:
+#   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
+#   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
+
 Configuration LOG_002_Increase_Security_log_maximum_size {
     Import-DscResource -ModuleName PSDscResources
 

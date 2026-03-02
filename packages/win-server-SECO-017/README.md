@@ -13,16 +13,19 @@ Prevents unauthenticated users from stopping services/causing downtime via shutd
 ## What this package changes
 - Registry: `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\ShutdownWithoutLogon` (DWord) = `0`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Shutdown: Allow system to be shut down without having to log on** and confirm it is set to **Disabled**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ShutdownWithoutLogon
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Shutdown: Allow system to be shut down without having to log on`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `ShutdownWithoutLogon` (DWord) = `0`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

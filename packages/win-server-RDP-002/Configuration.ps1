@@ -5,6 +5,15 @@ Purpose: Enforces a Windows security hardening registry setting: Set client conn
 Version: 1.0.0
 #>
 
+# win-server-RDP-002: Set client connection encryption level
+# This DSC configuration targets the local security policy setting:
+#   ...\Remote Desktop Session Host\Security -> Set client connection encryption level = High
+# Expected impact: Low
+#
+# Implementation notes:
+#   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
+#   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
+
 Configuration RDP_002_Set_client_connection_encryption_level {
     Import-DscResource -ModuleName PSDscResources
 

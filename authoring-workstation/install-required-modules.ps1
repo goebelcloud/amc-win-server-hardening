@@ -37,6 +37,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Platform detection:
+# The authoring workflow is primarily intended for Windows. We still attempt to behave sensibly
+# when executed in PowerShell 7 on non-Windows platforms (for example, for linting or reading files).
+
 # Determine Windows vs non-Windows reliably (Windows PowerShell 5.1 doesn't define $IsWindows)
 $isWindowsPlatform = $false
 if ($env:OS -eq "Windows_NT") { $isWindowsPlatform = $true }
@@ -47,6 +51,10 @@ Write-Host "Installing required modules for Machine Configuration authoring..." 
 Write-Host " - Scope: $Scope" -ForegroundColor Cyan
 Write-Host " - Force: $Force" -ForegroundColor Cyan
 
+# TLS/Package provider setup:
+# Older Windows builds may default to TLS versions that cannot negotiate with PowerShell Gallery.
+# We force TLS 1.2 and ensure NuGet provider is present so Install-Module works reliably.
+
 # Ensure TLS 1.2 for older environments
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
@@ -54,6 +62,10 @@ try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::
 if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
   Install-PackageProvider -Name NuGet -Force -Scope $Scope | Out-Null
 }
+
+# Module list:
+# These modules are required on the *authoring* VM only. The build process packages the DSC resources into the ZIP,
+# so target VMs do not need these modules preinstalled.
 
 # Required modules
 $requiredModules = @(

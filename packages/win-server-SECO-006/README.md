@@ -13,16 +13,19 @@ Further reduces anonymous discovery of users and shares (reconnaissance).
 ## What this package changes
 - Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\RestrictAnonymous` (DWord) = `1`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Network access: Do not allow anonymous enumeration of SAM accounts and shares** and confirm it is set to **Enabled**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RestrictAnonymous
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Network access: Do not allow anonymous enumeration of SAM accounts and shares`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `RestrictAnonymous` (DWord) = `1`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

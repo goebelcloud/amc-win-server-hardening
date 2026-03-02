@@ -9,15 +9,19 @@
 
 ## What this package changes
 
+## How to verify the setting is applied (built-in OS tools)
 
-## How to evaluate the setting (built-in OS tools)
-**Local accounts by well-known RID**
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Accounts: Guest account status** and confirm it is set to **Disabled**.
+
+### Command-line verification
+**Guest account (RID 501) check (PowerShell)**
 ```powershell
-Get-LocalUser | Select Name, Enabled, SID
+Get-LocalUser | Where-Object { $_.SID.Value -match "-501$" } | Select-Object Name, SID, Enabled
 ```
-
-## Manual remediation (built-in OS tools)
-Apply via `Rename-LocalUser`, `Disable-LocalUser` / `Enable-LocalUser`.
+Verify the guest account is disabled and/or renamed as required by the package.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:
@@ -26,7 +30,6 @@ These packages assume the VM is prepared for Azure Machine Configuration:
 - **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
 
 You can enforce these prerequisites using the included policies under `../../policies/`.
-
 
 ## DSC Configuration
 - Configuration name: `SECO_002_Accounts_Guest_account_status`
@@ -55,7 +58,6 @@ Outputs are written to the folders configured in `packages/machine-configuration
 - `./output/zip/` (package ZIPs)
 - `./output/policy/` (policy JSON artifacts)
 
-
 ## Build in batch (repo root)
 
 From the repo root:
@@ -64,7 +66,6 @@ From the repo root:
 ```
 
 The script skips packages that already have an output zip unless you add `-ForceRebuild`.
-
 
 ## Policy files included
 - `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
@@ -79,8 +80,6 @@ The script skips packages that already have an output zip unless you add `-Force
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
 - Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
   https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-
 
 ## Hydrate policy JSON for this package
 

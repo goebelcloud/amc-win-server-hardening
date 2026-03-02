@@ -16,25 +16,19 @@ Reduces discovery/targeting of the well-known 'Guest' username.
   - `C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt`
 - Default value (if no parameter override is supplied): `LocalGuest`
 
-## How to evaluate the setting (built-in OS tools)
+## How to verify the setting is applied (built-in OS tools)
 
-**1) Find the Guest account by RID 501**
-```powershell
-Get-CimInstance Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE 'S-1-5-21-%-501'" |
-  Select-Object Name, SID, Disabled
-```
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Accounts: Rename guest account** and confirm it is set to **Rename to non-default (even if disabled)**.
 
-**2) Confirm the desired name (parameter file)**
+### Command-line verification
+**Guest account (RID 501) check (PowerShell)**
 ```powershell
-Get-Content "C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt" -ErrorAction SilentlyContinue
+Get-LocalUser | Where-Object { $_.SID.Value -match "-501$" } | Select-Object Name, SID, Enabled
 ```
-
-## Manual remediation (built-in OS tools)
-Rename the Guest account using local tools (validate operational dependencies first):
-```powershell
-$user = Get-LocalUser | Where-Object SID -like "S-1-5-21-*-501"
-Rename-LocalUser -Name $user.Name -NewName "LocalGuest"
-```
+Verify the guest account is disabled and/or renamed as required by the package.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

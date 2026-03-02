@@ -13,16 +13,19 @@ Prevents weak LM password hashes from being stored, reducing offline cracking ri
 ## What this package changes
 - Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\NoLMHash` (DWord) = `1`
 
-## How to evaluate the setting (built-in OS tools)
-**Registry check(s)**
-```powershell
+## How to verify the setting is applied (built-in OS tools)
+
+### GUI verification
+1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
+2. Navigate to: **Local Policies > Security Options**.
+3. Open **Network security: Do not store LAN Manager hash value on next password change** and confirm it is set to **Enabled**.
+
+### Command-line verification
+**Registry check (PowerShell / reg.exe)**
+```cmd
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v NoLMHash
 ```
-
-## Manual remediation (built-in OS tools)
-You can remediate manually using:
-- `secpol.msc` → `Local Policies\Security Options` → `Network security: Do not store LAN Manager hash value on next password change`  
-- or direct registry tooling (`reg add`) if you manage the setting that way.
+Expected: `NoLMHash` (DWord) = `1`.
 
 ## Machine Configuration prerequisites (expected on target VMs)
 These packages assume the VM is prepared for Azure Machine Configuration:

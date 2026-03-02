@@ -31,6 +31,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Finds the nearest 'packages/machine-configuration.config.json' by walking up the directory tree.
+# This makes the script resilient when executed from different working directories.
+
 function Find-RepositoryConfig {
   param([string]$StartDirectory)
 
@@ -67,12 +70,22 @@ Write-Host ("Packages root: {0}" -f $packagesRoot)
 Write-Host ("ZIP output:    {0}" -f $zipRoot)
 Write-Host ("Mode:          {0}" -f $perPackageMode)
 
+# Package discovery:
+# We treat any directory that contains a build.ps1 as a package folder.
+# Package folders are named only by ControlId (for example: win-server-ACCT-001).
+
 $packageFolders = Get-ChildItem -Path $packagesRoot -Directory |
   Where-Object { Test-Path (Join-Path $_.FullName "build.ps1") }
 
 if ($PackageFolderPrefix) {
   $packageFolders = $packageFolders | Where-Object { $_.Name.StartsWith($PackageFolderPrefix) }
 }
+
+# Build loop:
+# Each package build script is responsible for:
+#   - compiling its DSC configuration to a MOF
+#   - creating the Guest Configuration ZIP
+#   - optionally generating baseline policy JSON (if ContentUriBase/UAMI are configured)
 
 foreach ($pkg in $packageFolders) {
   $pkgPath = $pkg.FullName
