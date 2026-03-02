@@ -165,11 +165,24 @@ if (-not (Test-Path $configurationScriptPath)) {
 # Compile MOF
 & SECO_005_Network_access_Do_not_allow_anonymous_enumeration_o -OutputPath $mofOutputPath
 
-$mofFilePath = Join-Path (Join-Path $mofOutputPath "SECO_005_Network_access_Do_not_allow_anonymous_enumeration_o") "localhost.mof"
-if (-not (Test-Path $mofFilePath)) {
-  throw ("MOF file not found at expected path: {0}" -f $mofFilePath)
+# DSC outputs node MOFs directly into the -OutputPath directory (for example: "<OutputPath>\localhost.mof").
+# Some patterns also create a nested folder for the configuration name. Handle both to be robust.
+$mofCandidatePaths = @(
+  (Join-Path $mofOutputPath "localhost.mof"),
+  (Join-Path (Join-Path $mofOutputPath "SECO_005_Network_access_Do_not_allow_anonymous_enumeration_o") "localhost.mof")
+)
+
+$mofFilePath = $mofCandidatePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $mofFilePath) {
+  $found = Get-ChildItem -Path $mofOutputPath -Recurse -Filter "localhost.mof" -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($found) {
+    $mofFilePath = $found.FullName
+  }
 }
 
+if (-not $mofFilePath) {
+  throw ("MOF file not found under output path: {0}" -f $mofOutputPath)
+}
 # Create Machine Configuration package ZIP
 if ((Test-Path $expectedZipPath) -and $ForceRebuild) {
   Remove-Item -Path $expectedZipPath -Force
