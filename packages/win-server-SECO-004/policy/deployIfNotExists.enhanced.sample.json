@@ -136,28 +136,6 @@
           {
             "field": "identity.userAssignedIdentities",
             "containsKey": "[parameters('requiredUserAssignedIdentityResourceId')]"
-          },
-          {
-            "count": {
-              "field": "Microsoft.Compute/virtualMachines/extensions[*]",
-              "where": {
-                "allOf": [
-                  {
-                    "field": "Microsoft.Compute/virtualMachines/extensions[*].publisher",
-                    "equals": "Microsoft.GuestConfiguration"
-                  },
-                  {
-                    "field": "Microsoft.Compute/virtualMachines/extensions[*].type",
-                    "equals": "ConfigurationforWindows"
-                  },
-                  {
-                    "field": "Microsoft.Compute/virtualMachines/extensions[*].provisioningState",
-                    "equals": "Succeeded"
-                  }
-                ]
-              }
-            },
-            "greater": 0
           }
         ]
       },
