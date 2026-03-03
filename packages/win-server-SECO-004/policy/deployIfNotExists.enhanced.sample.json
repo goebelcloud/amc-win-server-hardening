@@ -113,19 +113,19 @@
               },
               {
                 "field": "Microsoft.Compute/imageOffer",
-                "like": "*WS2016*"
+                "contains": "WS2016"
               },
               {
                 "field": "Microsoft.Compute/imageOffer",
-                "like": "*WS2019*"
+                "contains": "WS2019"
               },
               {
                 "field": "Microsoft.Compute/imageOffer",
-                "like": "*WS2022*"
+                "contains": "WS2022"
               },
               {
                 "field": "Microsoft.Compute/imageOffer",
-                "like": "*WS2025*"
+                "contains": "WS2025"
               }
             ]
           },
