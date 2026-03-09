@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-  Hydrate enhanced Azure Policy JSON for all packages.
+  Hydrate Azure Policy JSON for all packages (enhanced + non-enhanced).
 
 .DESCRIPTION
   Iterates all package folders under .\packages\<ControlId>\ and invokes each package's hydrate-policy.ps1.
-  The per-package hydrate script renders an enhanced DeployIfNotExists policy JSON
+  The per-package hydrate script renders both enhanced and non-enhanced DeployIfNotExists policy JSON variants
 
   Note: ControlIdPolicyPrefix is used only for Azure Policy displayName. by replacing placeholders in:
-    policy/deployIfNotExists.enhanced.sample.json
+    policy/deployIfNotExists.enhanced.sample.json and policy/deployIfNotExists.json
 
   The hydrated policy output is written to the configured policy output folder (never into the package folder).
 
@@ -86,7 +86,7 @@ $packageFolders = Get-ChildItem -Path $packagesRootFullPath -Directory |
 
 # Hydration loop:
 # For each package we call its hydrate-policy.ps1, which:
-#   - reads policy/deployIfNotExists.enhanced.sample.json
+#   - reads policy/deployIfNotExists.enhanced.sample.json and policy/deployIfNotExists.json
 #   - injects contentUri/contentHash/UAMI into metadata.guestConfiguration
 #   - writes deployIfNotExists.enhanced.json to the configured PolicyOutputRoot
 

@@ -1,16 +1,19 @@
 <#
 .SYNOPSIS
-  Hydrate the enhanced policy JSON for this package (win-server-RDP-002).
+  Hydrate policy JSON for this package (enhanced + non-enhanced) (win-server-RDP-002).
 
 .DESCRIPTION
-  Reads the template under: policy/deployIfNotExists.enhanced.sample.json
+  Reads templates under:
+    - policy/deployIfNotExists.enhanced.sample.json
+    - policy/deployIfNotExists.json
   Replaces placeholders:
     - __CONTENT_URI__  -> <ContentUriBase>/<ControlId>.zip
     - __CONTENT_HASH__ -> SHA256 of the built package ZIP
     - __UAMI_RESOURCE_ID__ -> required UAMI resource ID
 
   The hydrated policy is written to the configured policy output folder (never into the package folder):
-    OutputPaths.PolicyOutputRoot/<ControlId>/deployIfNotExists.enhanced.json   (default)
+    OutputPaths.PolicyOutputRoot/<ControlId>/deployIfNotExists.enhanced.json
+    OutputPaths.PolicyOutputRoot/<ControlId>/deployIfNotExists.json
 
   Defaults are read from:
     packages/machine-configuration.config.json
@@ -18,7 +21,7 @@
 .NOTES
   File: hydrate-policy.ps1
   Package: win-server-RDP-002 - Set client connection encryption level
-  Purpose: Hydrates the enhanced Azure Policy JSON template for the setting "Set client connection encryption level" (win-server-RDP-002).
+  Purpose: Hydrates Azure Policy JSON templates (enhanced + non-enhanced) for the setting "Set client connection encryption level" (win-server-RDP-002).
   Version: 1.0.0
 #>
 
@@ -148,7 +151,34 @@ $templateObject.properties.displayName = ("{0} - {1} (Machine Configuration)" -f
 ($templateObject | ConvertTo-Json -Depth 50) | Set-Content -Path $outPath -Encoding UTF8
 ($templateObject.properties | ConvertTo-Json -Depth 50) | Set-Content -Path $outPortalPath -Encoding UTF8
 
-Write-Host ("Hydrated policy written: {0}" -f $outPath) -ForegroundColor Green
+# --- Non-enhanced policy hydration (deployIfNotExists.json) ---
+# This variant removes the additional prerequisite gates used in the enhanced sample policy.
+# Use this when you want Azure Policy to deploy the Guest Configuration assignment without
+# requiring identity/UAMI checks in the policy 'if' clause (prereqs can be enforced separately).
+$baseTemplatePath = Join-Path $packageRoot "policy\deployIfNotExists.json"
+if (-not (Test-Path $baseTemplatePath)) {
+  throw ("Policy template not found: {0}" -f $baseTemplatePath)
+}
+
+$baseTemplateJson = Get-Content -Path $baseTemplatePath -Raw
+$baseTemplateJson = $baseTemplateJson.Replace("__CONTENT_URI__", $contentUri)
+$baseTemplateJson = $baseTemplateJson.Replace("__CONTENT_HASH__", $hash)
+$baseTemplateJson = $baseTemplateJson.Replace("__UAMI_RESOURCE_ID__", $RequiredUamiResourceId)
+
+$outBasePath = Join-Path $outPolicyFolder "deployIfNotExists.json"
+$outBasePortalPath = ($outBasePath -replace "\.json$", ".portal.json")
+
+$baseTemplateObject = $baseTemplateJson | ConvertFrom-Json -Depth 50
+$baseTemplateObject.properties.displayName = ("{0} - {1} (Machine Configuration)" -f $policyDisplayId, $settingTitle)
+($baseTemplateObject | ConvertTo-Json -Depth 50) | Set-Content -Path $outBasePath -Encoding UTF8
+($baseTemplateObject.properties | ConvertTo-Json -Depth 50) | Set-Content -Path $outBasePortalPath -Encoding UTF8
+
+
+Write-Host "Hydrated policies written:" -ForegroundColor Green
+Write-Host ("  Enhanced JSON:       {0}" -f $outPath)
+Write-Host ("  Enhanced Portal:     {0}" -f $outPortalPath)
+Write-Host ("  Non-enhanced JSON:   {0}" -f $outBasePath)
+Write-Host ("  Non-enhanced Portal: {0}" -f $outBasePortalPath)
 Write-Host ("contentUri:  {0}" -f $contentUri)
 Write-Host ("contentHash: {0}" -f $hash)
 Write-Host ("required UAMI: {0}" -f $RequiredUamiResourceId)

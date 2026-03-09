@@ -15,7 +15,10 @@
         "contentHash": "__CONTENT_HASH__",
         "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
         "configurationParameter": {}
-      }
+      },
+      "requiredProviders": [
+        "Microsoft.GuestConfiguration"
+      ]
     },
     "parameters": {
       "effect": {
@@ -62,6 +65,30 @@
                 "like": "Windows*"
               }
             ]
+          },
+          {
+            "field": "Microsoft.Compute/imageOffer",
+            "like": "WindowsServer*"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2016*"
+              },
+              {
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2019*"
+              },
+              {
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2022*"
+              },
+              {
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2025*"
+              }
+            ]
           }
         ]
       },
@@ -70,7 +97,7 @@
         "details": {
           "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
           "roleDefinitionIds": [
-            "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            "/providers/Microsoft.Authorization/roleDefinitions/088ab73d-1256-47ae-bea9-9de8e7131f31"
           ],
           "deployment": {
             "properties": {
@@ -84,6 +111,9 @@
                 },
                 "assignmentType": {
                   "value": "[parameters('assignmentType')]"
+                },
+                "assignmentName": {
+                  "value": "[concat('win-server-AUD-005$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]"
                 }
               },
               "template": {
@@ -98,13 +128,16 @@
                   },
                   "assignmentType": {
                     "type": "string"
+                  },
+                  "assignmentName": {
+                    "type": "string"
                   }
                 },
                 "resources": [
                   {
-                    "apiVersion": "2021-01-25",
+                    "apiVersion": "2024-04-05",
                     "type": "Microsoft.Compute/virtualMachines/providers/guestConfigurationAssignments",
-                    "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/win-server-AUD-005')]",
+                    "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/', parameters('assignmentName'))]",
                     "location": "[parameters('location')]",
                     "properties": {
                       "guestConfiguration": {
@@ -114,14 +147,21 @@
                         "contentHash": "__CONTENT_HASH__",
                         "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
                         "assignmentType": "[parameters('assignmentType')]",
-                        "configurationParameter": []
+                        "configurationParameter": [],
+                        "contentType": "Custom"
                       }
                     }
                   }
                 ]
               }
             }
-          }
+          },
+          "name": "[concat('win-server-AUD-005$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]",
+          "existenceCondition": {
+            "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+            "equals": "Compliant"
+          },
+          "evaluationDelay": "AfterProvisioningSuccess"
         }
       }
     }

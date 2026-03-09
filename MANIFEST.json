@@ -1,6 +1,6 @@
 {
   "name": "Azure Machine Configuration hardening packages (win-server control IDs, displayName prefix only)",
-  "generatedUtc": "2026-03-03T08:37:44Z",
+  "generatedUtc": "2026-03-09T08:56:42Z",
   "changes": [
     "Control IDs for packages and Excel use prefix 'win-server-' (for example: win-server-ACCT-001).",
     "ControlIdPolicyPrefix in packages/machine-configuration.config.json is used ONLY for Azure Policy displayName (human-readable).",
@@ -25,13 +25,16 @@
     "Updated all package README.md files: replaced manual remediation with explicit GUI + command-line verification steps to confirm settings were applied.",
     "Fixed Azure Portal policy definition import: hydration and baseline policy generation now emit a *.portal.json variant (properties-only) to avoid nested properties.properties errors in the Portal JSON editor.",
     "Fixed Azure Policy wildcard constraint: replaced imageOffer like '*WS2016*' style patterns with contains 'WS2016' (and WS2019/WS2022/WS2025) in all enhanced policy templates.",
-    "Removed invalid VM extension array alias checks (Microsoft.Compute/virtualMachines/extensions[*]) from all enhanced policy templates; Azure Policy doesn't support that alias. Extension prerequisites should be enforced via the prerequisite initiative/policies."
+    "Removed invalid VM extension array alias checks (Microsoft.Compute/virtualMachines/extensions[*]) from all enhanced policy templates; Azure Policy doesn't support that alias. Extension prerequisites should be enforced via the prerequisite initiative/policies.",
+    "Quality check v12: fixed policy guestConfiguration.name mismatches in win-server-SECO-004..016 so each policy deploys and evaluates its own package assignment.",
+    "Deep static quality check re-run: package count, Excel/package ID parity, JSON parsing, DINE fields, invalid alias/wildcard checks, and policy/package identifier consistency all passed.",
+    "No functional source refactor in this variant. Package-local policy JSON sources remain under each package."
   ],
   "files": [
     {
       "path": "README.md",
-      "sha256": "722750a4500fed19c0a9ae447d7439f5596cf307619ea48276ccf45235f1fbac",
-      "sizeBytes": 2613
+      "sha256": "9f4f2332e15cbd7d5ee947fc9d76c09caa245f13994a913f641778b83335816a",
+      "sizeBytes": 3037
     },
     {
       "path": "SOURCES.txt",
@@ -74,6 +77,11 @@
       "sizeBytes": 3050
     },
     {
+      "path": "docs/06-quality-check-summary.md",
+      "sha256": "f5f411d972f3c23130ab58f45fa31cf53e6364564fd431993d4b1df0272b6fb1",
+      "sizeBytes": 1045
+    },
+    {
       "path": "docs/deployment-guide.md",
       "sha256": "8ab8a3aee9b90b97e73797ed1381ab7ea1181793b9042141cb0d0981e202e0cf",
       "sizeBytes": 6201
@@ -110,18 +118,28 @@
     },
     {
       "path": "packages/win-server-ACCT-001/hydrate-policy.ps1",
-      "sha256": "da8b5a66f8c8b0f4ddd2a6451824362cd1af885dfc24af2da00f7856c8514166",
-      "sizeBytes": 7059
+      "sha256": "ee43e9b44df2c8f541f26423907d8f7cc38c8b3bc9f86779a9b8b276e5895f1c",
+      "sizeBytes": 8778
+    },
+    {
+      "path": "packages/win-server-ACCT-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "7ef7b7ce9eeb133a28776f38592ed511f0ff18c5d40c75f7e9f098740168ed18",
+      "sizeBytes": 6120
     },
     {
       "path": "packages/win-server-ACCT-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "3daea0f92387950cb539e4c7908cbb599c98b07359cc053e9de5f174ce67e78c",
-      "sizeBytes": 6531
+      "sha256": "4e60725779d87310ad82a327c4fbcf0c40532b62c4bd5c426f99302e3d34249c",
+      "sizeBytes": 6503
     },
     {
       "path": "packages/win-server-ACCT-001/policy/deployIfNotExists.json",
-      "sha256": "628efe52463db84f822e01b1d0de1aa237f24be33805585163b3229be148200a",
-      "sizeBytes": 4434
+      "sha256": "80eb2a3fbb8f934a9e2ca78e84d126cd79628d67e55cfa91e5cea3b16d9c69ba",
+      "sizeBytes": 5877
+    },
+    {
+      "path": "packages/win-server-ACCT-001/policy/deployIfNotExists.portal.json",
+      "sha256": "79797ab1c4b2f08b3ffeaaea6688dd55e953cbc21cc919d7cc1ab22bb98a6372",
+      "sizeBytes": 5525
     },
     {
       "path": "packages/win-server-ACCT-002/Configuration.ps1",
@@ -140,18 +158,28 @@
     },
     {
       "path": "packages/win-server-ACCT-002/hydrate-policy.ps1",
-      "sha256": "22b66bcf68c3bf4686da4e17f228b358d8eff8d052decb77343f9b0040127a35",
-      "sizeBytes": 7053
+      "sha256": "bae9300bfe971c7592f9aa92bc24f48ae0dd1b4db82a97a0b53d2af95d15a0a2",
+      "sizeBytes": 8772
+    },
+    {
+      "path": "packages/win-server-ACCT-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "ba049ef62a817358f595cd6369b4cba10fa72dd3e341395dc004b41f1e74507b",
+      "sizeBytes": 6122
     },
     {
       "path": "packages/win-server-ACCT-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "fdc25e3de405e3e3997d6aa3c290a4242a719675f25fabb92df0ce3152dfc299",
-      "sizeBytes": 6536
+      "sha256": "bfc9c16cdfbe14106c6be6ddd3285a6537ba6d194c1eaa2b402c66344d185ae8",
+      "sizeBytes": 6505
     },
     {
       "path": "packages/win-server-ACCT-002/policy/deployIfNotExists.json",
-      "sha256": "c56c1f62c6028ae358133020f12921f5fabf44638f5735d166309b649bb4ec7a",
-      "sizeBytes": 4439
+      "sha256": "cba233a5b5160c0018db094009b4928958dad907e2bdc040af18dbb4c46cadaa",
+      "sizeBytes": 5879
+    },
+    {
+      "path": "packages/win-server-ACCT-002/policy/deployIfNotExists.portal.json",
+      "sha256": "0667c9296bafe8f7ac3b2680035546b4d5a1d356e65d9cbfd177c0202bd0a6b3",
+      "sizeBytes": 5527
     },
     {
       "path": "packages/win-server-ACCT-003/Configuration.ps1",
@@ -170,18 +198,28 @@
     },
     {
       "path": "packages/win-server-ACCT-003/hydrate-policy.ps1",
-      "sha256": "27c0fa5859f9423d7819d3c15b67d2aff71c15d5ae3a555a191461bf23594e26",
-      "sizeBytes": 7025
+      "sha256": "08d880832c10b58f2d915e9232c527bcd534d4bbfb866dbcdbe09928d358d029",
+      "sizeBytes": 8744
+    },
+    {
+      "path": "packages/win-server-ACCT-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "202bd4c4346f4a40e4968469923e34d5731926b6adb37b6bde2337f12607a77a",
+      "sizeBytes": 6094
     },
     {
       "path": "packages/win-server-ACCT-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "00518f33f98def3debcdc4c1cb97e8ecf578243d7fd4360cfad09d36cb8a2f09",
-      "sizeBytes": 6505
+      "sha256": "fabef2a6bbfb5655def232926efb5da936fb2986656d1bbdc8d5f3609805b82e",
+      "sizeBytes": 6477
     },
     {
       "path": "packages/win-server-ACCT-003/policy/deployIfNotExists.json",
-      "sha256": "7d5beb4c58648066fecc5e32f1f360f93af8236b431d896ed88cf435352d56c9",
-      "sizeBytes": 4408
+      "sha256": "b73f79fdb49db21321209012ee30f0be93213d6824564ad5ed4f725c118630c2",
+      "sizeBytes": 5851
+    },
+    {
+      "path": "packages/win-server-ACCT-003/policy/deployIfNotExists.portal.json",
+      "sha256": "22fec49be9a2c457db4b47db9b18edcc64670defc38c041aaad46b7dc2661933",
+      "sizeBytes": 5499
     },
     {
       "path": "packages/win-server-ACCT-004/Configuration.ps1",
@@ -200,18 +238,28 @@
     },
     {
       "path": "packages/win-server-ACCT-004/hydrate-policy.ps1",
-      "sha256": "7a5d7d47d5568c974611f10522ddd77032fe74e760d38f8f0ed4461383e409e8",
-      "sizeBytes": 7045
+      "sha256": "31b46301c853b04dfbbc57204e96eda047b982d36d05320459a7451e14b7c555",
+      "sizeBytes": 8764
+    },
+    {
+      "path": "packages/win-server-ACCT-004/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "3df01dcb5ba24029f71797f70ca33e12829aa9909bb5ae611af6db44c6688cd3",
+      "sizeBytes": 6108
     },
     {
       "path": "packages/win-server-ACCT-004/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "c2e0246339f65e94e94a0671f6eba23928154a8f7445e27bb72ac001dc54a1d0",
-      "sizeBytes": 6519
+      "sha256": "14d15031e3ae56f036721484df67bbc8ef0c87e3c988488f3e5b347f6b64a0df",
+      "sizeBytes": 6491
     },
     {
       "path": "packages/win-server-ACCT-004/policy/deployIfNotExists.json",
-      "sha256": "450399dc1f84ab56b5ae9b803e2007fb9b584aa88bf005541afa25151ea3d62f",
-      "sizeBytes": 4422
+      "sha256": "1fe7e4a56d6bf472d570e1a4de30e1953e77021d4801a6bbc0bd46a7924cc680",
+      "sizeBytes": 5865
+    },
+    {
+      "path": "packages/win-server-ACCT-004/policy/deployIfNotExists.portal.json",
+      "sha256": "b1ef0a8fb9f3968f212a4d479782cdea8072863a6feb8982d6e43b1f132dbefe",
+      "sizeBytes": 5513
     },
     {
       "path": "packages/win-server-ACCT-005/Configuration.ps1",
@@ -230,18 +278,28 @@
     },
     {
       "path": "packages/win-server-ACCT-005/hydrate-policy.ps1",
-      "sha256": "ac108539057d2786a4389f9a6b7a1ef06eea65b38fbebf6b5d4fd16d666a5435",
-      "sizeBytes": 7115
+      "sha256": "84bec1cace1a252471adf69a81f49c87127be66e1c95030df3f985adb0782890",
+      "sizeBytes": 8834
+    },
+    {
+      "path": "packages/win-server-ACCT-005/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "82f6578c9a064d738d2353f2a45e29d074e9951012762619cc5d0680c6545492",
+      "sizeBytes": 6140
     },
     {
       "path": "packages/win-server-ACCT-005/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "4ef5039aae6e831caaf4c043ad1962427bcf7ecf366b827e5f7a175cf7134cc1",
-      "sizeBytes": 6551
+      "sha256": "13ecc0018a0efd34ee1de4e628aa49c0faab031cefd10e16691ae996f1f9b908",
+      "sizeBytes": 6523
     },
     {
       "path": "packages/win-server-ACCT-005/policy/deployIfNotExists.json",
-      "sha256": "0177f928f4969ac6686fe408a36d473b3aa6bf90844ad823e512e6dcaefd4704",
-      "sizeBytes": 4454
+      "sha256": "74c6018412822d77dc86c4dd215ded18e2b26f46f5f941d6799cc5c80299664e",
+      "sizeBytes": 5897
+    },
+    {
+      "path": "packages/win-server-ACCT-005/policy/deployIfNotExists.portal.json",
+      "sha256": "245c77a69ed7c9e01892691895eb635fba74107a599272fe99531fec55feaea1",
+      "sizeBytes": 5545
     },
     {
       "path": "packages/win-server-ACCT-006/Configuration.ps1",
@@ -260,18 +318,28 @@
     },
     {
       "path": "packages/win-server-ACCT-006/hydrate-policy.ps1",
-      "sha256": "862293533f904340965dd5df709db01e5d2cde77f39a6ce16301ad55c32944ef",
-      "sizeBytes": 7120
+      "sha256": "d5eda713e40c9f81c87d9de0cd0a75c4d6b4d597924e89f9cfb6a0ed9415608e",
+      "sizeBytes": 8839
+    },
+    {
+      "path": "packages/win-server-ACCT-006/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "7372d69b836f9346abedf2cc41b169de35e902290516810f36b943762488421a",
+      "sizeBytes": 6143
     },
     {
       "path": "packages/win-server-ACCT-006/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "2bccaf6e5439bb39ef5ede8f0a54dc0f9bf21381e8c32b00d35842ae63ecabc6",
-      "sizeBytes": 6554
+      "sha256": "ec491a2c42c984ca95ca54df8a626246a82ceeefb92f5c477784f56e67165605",
+      "sizeBytes": 6526
     },
     {
       "path": "packages/win-server-ACCT-006/policy/deployIfNotExists.json",
-      "sha256": "5d0c47cad68cd7e55a7865ca9638dbfc7035f3d4cc2b951edb40940b4d1d7c80",
-      "sizeBytes": 4457
+      "sha256": "de1660b9d36fa7a5dfbf61d4018be12bfb0bf3937628bff2f9521dbddad0a2d0",
+      "sizeBytes": 5900
+    },
+    {
+      "path": "packages/win-server-ACCT-006/policy/deployIfNotExists.portal.json",
+      "sha256": "94782cfaacaee34917db2523c3457d47c7062cbaec17bacb79f3f8f538d6d036",
+      "sizeBytes": 5548
     },
     {
       "path": "packages/win-server-ACCT-007/Configuration.ps1",
@@ -290,18 +358,28 @@
     },
     {
       "path": "packages/win-server-ACCT-007/hydrate-policy.ps1",
-      "sha256": "5c310dde2377429dd5e45a8e1dce71ba60a70da53c20ada8b5b7e56014096529",
-      "sizeBytes": 7119
+      "sha256": "752d79ab8dbac9c61c35b555d651548a085e617a103b6e84a62144d11734decc",
+      "sizeBytes": 8838
+    },
+    {
+      "path": "packages/win-server-ACCT-007/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "a6f48bb4f1e26f42a6395c8e3dc239ddc37457d01c95cf21bd63723098a60103",
+      "sizeBytes": 6178
     },
     {
       "path": "packages/win-server-ACCT-007/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "bf6a1c5390d87b547d233571c06f6844ed155df49573fcc5fb3869bb2e2f1080",
-      "sizeBytes": 6589
+      "sha256": "2f78a4c2f006de8b031ff66dc575c1ea2b4e57f8b5fd610c60c1cd75874fb398",
+      "sizeBytes": 6561
     },
     {
       "path": "packages/win-server-ACCT-007/policy/deployIfNotExists.json",
-      "sha256": "d4b6e15b2f3a2fccc7274e2e8f3d1ff3df7021203b1ef9657d9b83168d885492",
-      "sizeBytes": 4492
+      "sha256": "ff1e2a980e63967e360fb9a9d292304e8937c35a44cd120cababa958e386fe88",
+      "sizeBytes": 5935
+    },
+    {
+      "path": "packages/win-server-ACCT-007/policy/deployIfNotExists.portal.json",
+      "sha256": "f0459fa45ab32534474fc39822704a39fefea76e859c904657f081a4b4a002d4",
+      "sizeBytes": 5583
     },
     {
       "path": "packages/win-server-ACCT-008/Configuration.ps1",
@@ -320,18 +398,28 @@
     },
     {
       "path": "packages/win-server-ACCT-008/hydrate-policy.ps1",
-      "sha256": "ce78a1eb2ddd41e6f55bb9ead9325085556c6fc74cbebdf07a591470cbd2d662",
-      "sizeBytes": 7053
+      "sha256": "cdda9edc2ffdbc08339a7d75dc6fcdc1092d286f4c606954ce706185b29edebd",
+      "sizeBytes": 8772
+    },
+    {
+      "path": "packages/win-server-ACCT-008/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "5be55493bf5d019a73f8bbfd04b56e53a8c27652d3c5385037b5ad641bcdf4c7",
+      "sizeBytes": 6114
     },
     {
       "path": "packages/win-server-ACCT-008/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "43c6807542f3677f6ff26152a47145df836b3b0a342a34db40234c48a027b9a0",
-      "sizeBytes": 6525
+      "sha256": "a44fbe073f69b8a23ccdf349a502ed68caa91014d79213fcaefc8ac5b5c4d900",
+      "sizeBytes": 6497
     },
     {
       "path": "packages/win-server-ACCT-008/policy/deployIfNotExists.json",
-      "sha256": "c239629ec3108bd517d585ba9e7a8b52a1690d53e84b49ea2827758856641298",
-      "sizeBytes": 4428
+      "sha256": "6dfd7219f6a897811e9f573bda95203db60629ee03e1a77ad9956b45b99b7009",
+      "sizeBytes": 5871
+    },
+    {
+      "path": "packages/win-server-ACCT-008/policy/deployIfNotExists.portal.json",
+      "sha256": "e12c4e2e3d1c53de7222d112629238b87033823e8344568a2d07a6c51e5ab405",
+      "sizeBytes": 5519
     },
     {
       "path": "packages/win-server-ACCT-009/Configuration.ps1",
@@ -350,18 +438,28 @@
     },
     {
       "path": "packages/win-server-ACCT-009/hydrate-policy.ps1",
-      "sha256": "9f1ec885967c13f566b53a648886993edf937886678774e33a743c9497a05ce2",
-      "sizeBytes": 7097
+      "sha256": "bc3801d801facfa36f23a9069c68844570da2c1a46f7abbd5f5ff142002bfdb5",
+      "sizeBytes": 8816
+    },
+    {
+      "path": "packages/win-server-ACCT-009/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "4290d36fe4ccd824ab6e3bf502f3c64ba6ed34816e63ab4fc767b28093b83e74",
+      "sizeBytes": 6136
     },
     {
       "path": "packages/win-server-ACCT-009/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "a185ab7031b5b9ed844d74fe26cc791880f961fcb50647809f36fca86e32cd8b",
-      "sizeBytes": 6547
+      "sha256": "0e87e8646650288e893587161df2a6d4348758fcc96265009c409e9d856a1448",
+      "sizeBytes": 6519
     },
     {
       "path": "packages/win-server-ACCT-009/policy/deployIfNotExists.json",
-      "sha256": "a4555db5dafc3ce1544186a037285942c63ee10d36a09c7d4ba8a068b3c5e52e",
-      "sizeBytes": 4450
+      "sha256": "6043d08a9b548d43a7dc8fccfcace33ea23a796b3ae22fc9abc2655c87bb0c1d",
+      "sizeBytes": 5893
+    },
+    {
+      "path": "packages/win-server-ACCT-009/policy/deployIfNotExists.portal.json",
+      "sha256": "13e781831c2cf857cfe2d7b684a8be548e48fcff531a84dcbe48bf1e56e7f3ff",
+      "sizeBytes": 5541
     },
     {
       "path": "packages/win-server-AUD-001/Configuration.ps1",
@@ -380,18 +478,28 @@
     },
     {
       "path": "packages/win-server-AUD-001/hydrate-policy.ps1",
-      "sha256": "51fa02a434a3d070dc20009c5145be2b10f68499fb88bebf7a5d2d68c444fbd6",
-      "sizeBytes": 7112
+      "sha256": "39c3865496b5f2f1a844a9cadf45ce4795677a1d085b351f37a2746b5a16e41b",
+      "sizeBytes": 8831
+    },
+    {
+      "path": "packages/win-server-AUD-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "3a5ac4b4cb97d9c51cae6f81bb6511382f88dea93abdbe99ad638795f3ad969e",
+      "sizeBytes": 6145
     },
     {
       "path": "packages/win-server-AUD-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "b50b2e5351fe06ac1275c64dc62688b2287f93f4d55e0607c6f9c063dfa0d979",
-      "sizeBytes": 6557
+      "sha256": "951e1095d55b5fa54947323e139fdb61e03ef4fa8ae971bf0ecd152dccdf0fba",
+      "sizeBytes": 6528
     },
     {
       "path": "packages/win-server-AUD-001/policy/deployIfNotExists.json",
-      "sha256": "f860f056f6576346a1370eb41117a0056a88b0d7abd66b8c273490494102ebeb",
-      "sizeBytes": 4460
+      "sha256": "d5a2d2234bb2ec350025ca6a375f67cc1c81d29725513b49a217697f9e9df70b",
+      "sizeBytes": 5902
+    },
+    {
+      "path": "packages/win-server-AUD-001/policy/deployIfNotExists.portal.json",
+      "sha256": "faf3763cec27ad2931def8ebb92d68649fca9f3fa1c6a49d0d9688a6bfd62ac3",
+      "sizeBytes": 5550
     },
     {
       "path": "packages/win-server-AUD-002/Configuration.ps1",
@@ -410,18 +518,28 @@
     },
     {
       "path": "packages/win-server-AUD-002/hydrate-policy.ps1",
-      "sha256": "b246943a79108b93a430585dea77ce714dd85872b8d7ed86284d4074d74eda38",
-      "sizeBytes": 7108
+      "sha256": "2750259140e0822109dbb53efd5a74afc09c20769122897de666eb7afc7347ab",
+      "sizeBytes": 8827
+    },
+    {
+      "path": "packages/win-server-AUD-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "68c8a37a3c48567104494aee3762552c8ddd37c78a357970d157dd64da3b1957",
+      "sizeBytes": 6143
     },
     {
       "path": "packages/win-server-AUD-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "933553a228aa89c1190c7edf9e24b9895654d4b8f3526d21f087de07e55ece15",
-      "sizeBytes": 6555
+      "sha256": "f51d411abbbef4cacb5e8e040b17a5310f50c5cb591d7587e91180f2b7fcbbc0",
+      "sizeBytes": 6526
     },
     {
       "path": "packages/win-server-AUD-002/policy/deployIfNotExists.json",
-      "sha256": "22aef8e804adc203292c0ce9af4f0d55fe4da05e25d3321b10b7b190a22a2e88",
-      "sizeBytes": 4458
+      "sha256": "67291d176c4a59b13085b3e24aebf5d03ed5a90aa09d4ac5fae8ea4f76bf89fb",
+      "sizeBytes": 5900
+    },
+    {
+      "path": "packages/win-server-AUD-002/policy/deployIfNotExists.portal.json",
+      "sha256": "4ef73d0eae0210e067d3aa00db5591aca50050d3c899c381c99d143b5447fd5a",
+      "sizeBytes": 5548
     },
     {
       "path": "packages/win-server-AUD-003/Configuration.ps1",
@@ -440,18 +558,28 @@
     },
     {
       "path": "packages/win-server-AUD-003/hydrate-policy.ps1",
-      "sha256": "44546f21cd54f66dd9157e5c8bf58cb747ecc4a584e8197288af475e756e3636",
-      "sizeBytes": 7132
+      "sha256": "bcc0ff0a2bff53f57e6aa5d0d1a9d7061e6565161e79fa3d860375938eb6c4ad",
+      "sizeBytes": 8851
+    },
+    {
+      "path": "packages/win-server-AUD-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "729c739613566ba465e32d5ed865af6cc59f13b359eb88869efa3c4d1e0f3920",
+      "sizeBytes": 6155
     },
     {
       "path": "packages/win-server-AUD-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "ea5bbbb563a4e45803df92c996c7d0e3178c805d6863d8621268729c3b174cc9",
-      "sizeBytes": 6567
+      "sha256": "4b74c8ec748d99fb1d0fe8c67ca636b227d9936da5894e1bb0e92ebb2fe01ad9",
+      "sizeBytes": 6538
     },
     {
       "path": "packages/win-server-AUD-003/policy/deployIfNotExists.json",
-      "sha256": "9fb24a83959991ad085cd67b066a1278dfa75bc99ed7dded3657841226a30ee0",
-      "sizeBytes": 4470
+      "sha256": "378586c16f4f71d85a8ed2afe39e4c4dd0c689fdabed54207f8761d43c10f63a",
+      "sizeBytes": 5912
+    },
+    {
+      "path": "packages/win-server-AUD-003/policy/deployIfNotExists.portal.json",
+      "sha256": "3da89a8bc6bfca33527ade1606b44ba656c691d87de1bc8309d7e2ad5086dcb2",
+      "sizeBytes": 5560
     },
     {
       "path": "packages/win-server-AUD-004/Configuration.ps1",
@@ -470,18 +598,28 @@
     },
     {
       "path": "packages/win-server-AUD-004/hydrate-policy.ps1",
-      "sha256": "050ff889e243892e96f70be2c9befa4ac3a1f5152c5e27cef3dee00c34d3da86",
-      "sizeBytes": 7112
+      "sha256": "22b223c2cc3746460a7b1b8e857a2a354a9dd6e653adcb5c1bd6b1879c899e83",
+      "sizeBytes": 8831
+    },
+    {
+      "path": "packages/win-server-AUD-004/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "7fa4dd0a6ba1ed19f47c5dfe09f2531a7abd05717391f1eac83f9da5573a1a02",
+      "sizeBytes": 6145
     },
     {
       "path": "packages/win-server-AUD-004/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "92aea9024e7612d3358ec223228f5c75474c6ff7d0479e718598a938f63f73d2",
-      "sizeBytes": 6557
+      "sha256": "955243a307833eb97b53c99778756d6c510d4cbdb83a70ed3cbedc0db265c125",
+      "sizeBytes": 6528
     },
     {
       "path": "packages/win-server-AUD-004/policy/deployIfNotExists.json",
-      "sha256": "1f48fe0726e1a8a3fa508276fd777f8fa94f617f1e58067280e8ba6e1dde09d6",
-      "sizeBytes": 4460
+      "sha256": "5d4e515ad42a73be3a470e2d02aae4d74a6d742c590901ab781d233c17c8ae5c",
+      "sizeBytes": 5902
+    },
+    {
+      "path": "packages/win-server-AUD-004/policy/deployIfNotExists.portal.json",
+      "sha256": "5b495f8bf29c91443875b856dd84886e34a95c4753c4a11bed48195de2ff3528",
+      "sizeBytes": 5550
     },
     {
       "path": "packages/win-server-AUD-005/Configuration.ps1",
@@ -500,18 +638,28 @@
     },
     {
       "path": "packages/win-server-AUD-005/hydrate-policy.ps1",
-      "sha256": "f58f04a3b506a7d9484f04c7bfc0e27775f005a50b259be90fd8bdcaa987bc85",
-      "sizeBytes": 7094
+      "sha256": "5db68660b142d483661a74b06794caa98bcf1298870aa40a59bf9b0428a7126c",
+      "sizeBytes": 8813
+    },
+    {
+      "path": "packages/win-server-AUD-005/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "2328b35ec9563b9736b8a228fbf8b9cd3c6d14c8839bb9281d3114f8698574b6",
+      "sizeBytes": 6143
     },
     {
       "path": "packages/win-server-AUD-005/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "6e4a5d1bfc178259059e1e973a0eb2d2c58737cb3ae0c555b6fdf35b329375ba",
-      "sizeBytes": 6555
+      "sha256": "786f2098bee491bbe8e10f01ad909566b44b5196dc7bc21ac3dc3c48fc612086",
+      "sizeBytes": 6526
     },
     {
       "path": "packages/win-server-AUD-005/policy/deployIfNotExists.json",
-      "sha256": "4d8f8f4bd92223c7d37fecbf2f7c37c8138edfc6ab38178d93419368284b42ef",
-      "sizeBytes": 4458
+      "sha256": "4655e5158f5546608edc1f553fa6e3c05a5fa355630d93ac04913e8b1394b18a",
+      "sizeBytes": 5900
+    },
+    {
+      "path": "packages/win-server-AUD-005/policy/deployIfNotExists.portal.json",
+      "sha256": "a1dc95cbcad35deef085a6149a2f328ca34c041f282bcfd2488ed7b640b182d9",
+      "sizeBytes": 5548
     },
     {
       "path": "packages/win-server-AUD-006/Configuration.ps1",
@@ -530,18 +678,28 @@
     },
     {
       "path": "packages/win-server-AUD-006/hydrate-policy.ps1",
-      "sha256": "de720ae049c04137eeb3f4bd354869ca3c805a973ae0f0092cc3f8acbab9f023",
-      "sizeBytes": 7084
+      "sha256": "ecd3acdd9fc509c17dba76581c6e623cad3f0a5bc60a62bcba5cbe45a27f2ef6",
+      "sizeBytes": 8803
+    },
+    {
+      "path": "packages/win-server-AUD-006/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "5a240b96ff789dda768bc416d54a7d009065aa8d6a8c4e8d28efa39e468d5d11",
+      "sizeBytes": 6131
     },
     {
       "path": "packages/win-server-AUD-006/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "a323c4d11640b7ee602db31424c55428ba94a958e7e7ae1ed6c9e7841b412abe",
-      "sizeBytes": 6543
+      "sha256": "e7508eed752f36ce28ada3eb446028e89629ae1c16847e5664e9bc46ce07c8eb",
+      "sizeBytes": 6514
     },
     {
       "path": "packages/win-server-AUD-006/policy/deployIfNotExists.json",
-      "sha256": "dcec8d38420d7daadb153002f5dff3499598669d93ac82408ddee0cb7e7db880",
-      "sizeBytes": 4446
+      "sha256": "ea05b242322cc734f2d0c2e4082f72e3fc86d7b7a275bbde43c287f7435e4f77",
+      "sizeBytes": 5888
+    },
+    {
+      "path": "packages/win-server-AUD-006/policy/deployIfNotExists.portal.json",
+      "sha256": "384e5b14f2a11da77b76f109ab56bfea8ef60d9cf2a622e2f369b122568ad666",
+      "sizeBytes": 5536
     },
     {
       "path": "packages/win-server-DEF-001/Configuration.ps1",
@@ -560,18 +718,28 @@
     },
     {
       "path": "packages/win-server-DEF-001/hydrate-policy.ps1",
-      "sha256": "6559588a0c939db20c8b273a75f42a9e148f7b8a917a7933b0b1ca687f28972a",
-      "sizeBytes": 7075
+      "sha256": "110a0e417f2bb175af22660be5dc82489125171afa5c5dc83f0a560cda343fb9",
+      "sizeBytes": 8794
+    },
+    {
+      "path": "packages/win-server-DEF-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "1dd752dd80fa0fc17866ab49278abda3de1e0a32522d6be93e55cf5d93d6b163",
+      "sizeBytes": 6143
     },
     {
       "path": "packages/win-server-DEF-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "dee01c900580df21782a69c3f2fd9820b90bb54cec01bd9f8b91cb63ea147abc",
-      "sizeBytes": 6555
+      "sha256": "9f4fb8c4828c26768e9540fd740c2e1104838f73ba7be93746f5c76cb658e488",
+      "sizeBytes": 6526
     },
     {
       "path": "packages/win-server-DEF-001/policy/deployIfNotExists.json",
-      "sha256": "87f28876487b86443e8d3abc5191a4b93376fb9c642b3bae16bb96d32f6b1f97",
-      "sizeBytes": 4458
+      "sha256": "dd87bdcab6b35082425d51e8bd6d1c080df275667f1b6f1bb72145b7e8ebd738",
+      "sizeBytes": 5900
+    },
+    {
+      "path": "packages/win-server-DEF-001/policy/deployIfNotExists.portal.json",
+      "sha256": "1d3934e2c32c2ed17c0bf9549865c0b7d9931ee0c0b250e3efa8ef69939ab626",
+      "sizeBytes": 5548
     },
     {
       "path": "packages/win-server-DEF-002/Configuration.ps1",
@@ -590,18 +758,28 @@
     },
     {
       "path": "packages/win-server-DEF-002/hydrate-policy.ps1",
-      "sha256": "f608d043817e9c281a049df74f503357a2fa741d80bdbdf70a27bf1a97c8f33d",
-      "sizeBytes": 7061
+      "sha256": "bc2352bde02f17510c80037fb957890f8021aa7dd1a81361d6752e65ce908530",
+      "sizeBytes": 8780
+    },
+    {
+      "path": "packages/win-server-DEF-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "db215bfc4c1c0c7b7b4db3d27fac4cb0ebc90500a79c38f6d8699ce8d7218a9e",
+      "sizeBytes": 6117
     },
     {
       "path": "packages/win-server-DEF-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "fab97917ab964aa7263fa4bb45d40f7f1aab4dc763763e518660d922b3ed0df0",
-      "sizeBytes": 6529
+      "sha256": "d157bfd9c0f72b7217833367feb3f3748c321021326969afeab9c43cf33cca59",
+      "sizeBytes": 6500
     },
     {
       "path": "packages/win-server-DEF-002/policy/deployIfNotExists.json",
-      "sha256": "79f79746fc434309dacea06f4e43bc3b21618465d138c6b97f54ddff994fb498",
-      "sizeBytes": 4432
+      "sha256": "ef983ace90fd0627a63facd648fdcb82ff72576e7f3a581877fe743ee5617248",
+      "sizeBytes": 5874
+    },
+    {
+      "path": "packages/win-server-DEF-002/policy/deployIfNotExists.portal.json",
+      "sha256": "97edae95f431d487fa3aec313cd87cab2ec7fbaad5551196157cc2c05ffda834",
+      "sizeBytes": 5522
     },
     {
       "path": "packages/win-server-DEF-003/Configuration.ps1",
@@ -620,18 +798,28 @@
     },
     {
       "path": "packages/win-server-DEF-003/hydrate-policy.ps1",
-      "sha256": "221fb985545c99d969bcfd4fa48b8fac1fe8095004864b4657f5f4db1e67d399",
-      "sizeBytes": 7161
+      "sha256": "abcfd40e365d7e6ffe9af9cf3bd35e736113ff235e05dca1c21a9e11e51758aa",
+      "sizeBytes": 8880
+    },
+    {
+      "path": "packages/win-server-DEF-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "84082c33f484987231bd42df285d6cf198510afae9a11bda201f6de2b9bc25b0",
+      "sizeBytes": 6171
     },
     {
       "path": "packages/win-server-DEF-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "d8468c7045a5f5f9a4729447f5fd61b391134050f9d22f67a637e126023f4bec",
-      "sizeBytes": 6583
+      "sha256": "92154a2670cf2d14808498b4d07b7de4b62982bfc665eb1bd37d385e694a495d",
+      "sizeBytes": 6554
     },
     {
       "path": "packages/win-server-DEF-003/policy/deployIfNotExists.json",
-      "sha256": "fa2dd834163c8ae836c2424e327062bad3a753687c55d1203f130edfd5184d10",
-      "sizeBytes": 4486
+      "sha256": "482b351e26b54c79a9eea41cb288d83cb38a218928a9583d1cb5381f3fb3400e",
+      "sizeBytes": 5928
+    },
+    {
+      "path": "packages/win-server-DEF-003/policy/deployIfNotExists.portal.json",
+      "sha256": "ca33b1f8da7bf2b5a87bfb18697c210334650d21543dfd7e32b7764d585b15aa",
+      "sizeBytes": 5576
     },
     {
       "path": "packages/win-server-FW-001/Configuration.ps1",
@@ -650,18 +838,28 @@
     },
     {
       "path": "packages/win-server-FW-001/hydrate-policy.ps1",
-      "sha256": "ce9e477e12454a18b9e918a98280c92e4af73294f50e152bca19f321719a6a0a",
-      "sizeBytes": 7131
+      "sha256": "f91d069795941ab44c60ada1999c71e96df7d23baa6ce6c2e90d16f4b19cd1fe",
+      "sizeBytes": 8850
+    },
+    {
+      "path": "packages/win-server-FW-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "673b515e5b8c63794529fdfb0eefc2a83f6f3a60a50dabe8cda200efe37a75ff",
+      "sizeBytes": 6173
     },
     {
       "path": "packages/win-server-FW-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "b58dee2160ea216024db50180b3253087dc0a9121905f01574878de5d1952b44",
-      "sizeBytes": 6586
+      "sha256": "f46ea41174a00a075e97348ac64cee1a68df0705b6648fb303c1ead12f670ab0",
+      "sizeBytes": 6556
     },
     {
       "path": "packages/win-server-FW-001/policy/deployIfNotExists.json",
-      "sha256": "af5a0e417fd1def5566093b792ad1b769884526c105fbfa8c85e80820922114e",
-      "sizeBytes": 4489
+      "sha256": "f581814f7ff49a6c03aad62fe3060e771bfcc3a15230fb7a228cdcb04ba4dafa",
+      "sizeBytes": 5930
+    },
+    {
+      "path": "packages/win-server-FW-001/policy/deployIfNotExists.portal.json",
+      "sha256": "a62244f8b1bcfcf774d9c31dc0bfdedb79e87fcd8326e3ef4e4a6cde6e541d3e",
+      "sizeBytes": 5578
     },
     {
       "path": "packages/win-server-FW-002/Configuration.ps1",
@@ -680,18 +878,28 @@
     },
     {
       "path": "packages/win-server-FW-002/hydrate-policy.ps1",
-      "sha256": "956f0610030daeeb26e5eca78e64f70eddba1b5ac455e1dba67af259e4836bb9",
-      "sizeBytes": 7127
+      "sha256": "8361c9e97225568a29d16deb87a7b1374fa8a82df6887e789b86644959e8f471",
+      "sizeBytes": 8846
+    },
+    {
+      "path": "packages/win-server-FW-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "4b4a86409618c0b0a21e7b8ea65ce33270957537285eb5111578d1b3ff3a94d9",
+      "sizeBytes": 6187
     },
     {
       "path": "packages/win-server-FW-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "357dc1b3fe72f1bac836d865ed5157e5872ef236c3197288000ebb8fb971abae",
-      "sizeBytes": 6600
+      "sha256": "26d335778ce6c0d23f89b1b7ee1c6c3d4f4f6c63d4257360ce5feeca5f6ce8c5",
+      "sizeBytes": 6570
     },
     {
       "path": "packages/win-server-FW-002/policy/deployIfNotExists.json",
-      "sha256": "1b6438d8dc912fc74c12bfd33f63cb65e04119288dc2385a1279c25bb1882ea5",
-      "sizeBytes": 4503
+      "sha256": "3e34f32ace2adcd06b73433ace656e5ba62d54f241b17ebd56671d22f8fa6155",
+      "sizeBytes": 5944
+    },
+    {
+      "path": "packages/win-server-FW-002/policy/deployIfNotExists.portal.json",
+      "sha256": "ff28c3373e4c42d3b5f1ffbbc6c0513e1f078ef28a093115585a3172caccc8fa",
+      "sizeBytes": 5592
     },
     {
       "path": "packages/win-server-LOG-001/Configuration.ps1",
@@ -710,18 +918,28 @@
     },
     {
       "path": "packages/win-server-LOG-001/hydrate-policy.ps1",
-      "sha256": "ad0474785bd1ac1bb49a8d644d0af995f5706b2350eec030d68eafeea320a960",
-      "sizeBytes": 7071
+      "sha256": "9c0e32d76930b6bbe4e54654bef0c8fb1b285bec859899b9624687c1292e9a47",
+      "sizeBytes": 8790
+    },
+    {
+      "path": "packages/win-server-LOG-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "338eec13933456f0477f88723ff1487df56da42e1f9c8bf7044377c225243d30",
+      "sizeBytes": 6117
     },
     {
       "path": "packages/win-server-LOG-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "8242f7d791fea7c4ddcc18bd77f5046b30554780b641948cffba320ccff637b5",
-      "sizeBytes": 6529
+      "sha256": "e73bf06b373b39abad549ad766c7611d982a4039d83bced5c8696f8515e3466a",
+      "sizeBytes": 6500
     },
     {
       "path": "packages/win-server-LOG-001/policy/deployIfNotExists.json",
-      "sha256": "0566a588bb1b9f404ac50eb938d8c7b5296bbc230f8e35992e935113f2eb834c",
-      "sizeBytes": 4432
+      "sha256": "657d31b2f3c4c57afa219c98177aef98b0568922986e6bd52503e4fd94906064",
+      "sizeBytes": 5874
+    },
+    {
+      "path": "packages/win-server-LOG-001/policy/deployIfNotExists.portal.json",
+      "sha256": "079c66d38c35508d7d60b8ba7b5eb04ffac6e67afc87cfdcddce8ef9705f9f15",
+      "sizeBytes": 5522
     },
     {
       "path": "packages/win-server-LOG-002/Configuration.ps1",
@@ -740,18 +958,28 @@
     },
     {
       "path": "packages/win-server-LOG-002/hydrate-policy.ps1",
-      "sha256": "0854b070fb0a6db5e8fa1ce790dfd84cfb10446e2756b3c0ae5ccc68c85c4557",
-      "sizeBytes": 7094
+      "sha256": "346078c81020d0981b59a3eac0728a4049342a2a786efa6bbcedb70e962cca57",
+      "sizeBytes": 8813
+    },
+    {
+      "path": "packages/win-server-LOG-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "b4b8e99570455353fb3980ba70804a622386b9adc7b03f3389c99ed0cf66b871",
+      "sizeBytes": 6133
     },
     {
       "path": "packages/win-server-LOG-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "1033fe358741a3be3e357994ea7ed2ae36250543bcb9662ba8570dc3ca6e0f94",
-      "sizeBytes": 6545
+      "sha256": "3acb4c40b53fca106cdd3bdec196b53266a3a5561ccdb1b18465efd3f28b9c70",
+      "sizeBytes": 6516
     },
     {
       "path": "packages/win-server-LOG-002/policy/deployIfNotExists.json",
-      "sha256": "314ded4987b79fd9ba444f6de0a1a7a3e66ba52302281657cc66ff5242d356ae",
-      "sizeBytes": 4448
+      "sha256": "111224bc676f5682e07a3fe839789ea98347aff6ba480ec2c8bfd6f0cbe1ba5d",
+      "sizeBytes": 5890
+    },
+    {
+      "path": "packages/win-server-LOG-002/policy/deployIfNotExists.portal.json",
+      "sha256": "1d6dacb88c4e4a1517596bdbce3c2b5b4d1d8bc58efc1b5ad380829637f1765d",
+      "sizeBytes": 5538
     },
     {
       "path": "packages/win-server-LSA-001/Configuration.ps1",
@@ -770,18 +998,28 @@
     },
     {
       "path": "packages/win-server-LSA-001/hydrate-policy.ps1",
-      "sha256": "88bd22dc242958f0c6aea37a694b8b485691420cd4d42b58a0f08a54e5672765",
-      "sizeBytes": 7095
+      "sha256": "24787314d182d1ccc86c133071ec7d3f2bce3b5a7da72e6c5c000c27c5ae67e7",
+      "sizeBytes": 8814
+    },
+    {
+      "path": "packages/win-server-LSA-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "fb455bc2e7824faa99bd62191ab2284bb650a45b111ec3b46e52f6e30346b575",
+      "sizeBytes": 6139
     },
     {
       "path": "packages/win-server-LSA-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "5f09a9b23ece16019d5243ed677c133f76599df821b673f25437f0950054a9c1",
-      "sizeBytes": 6551
+      "sha256": "8f47be96d66f2502d3d1b75bd732c7ac1ece18ccfc1597e0046db3fe8fc2207d",
+      "sizeBytes": 6522
     },
     {
       "path": "packages/win-server-LSA-001/policy/deployIfNotExists.json",
-      "sha256": "1c16a1a698e2dc1d31b46f5e6085d089d51948c4f71a55cc1164aee5ee7cc8d9",
-      "sizeBytes": 4454
+      "sha256": "765ccd5cb2a0492fb92738ce92b735305c55047bf2153cc47fccef0ac1263a54",
+      "sizeBytes": 5896
+    },
+    {
+      "path": "packages/win-server-LSA-001/policy/deployIfNotExists.portal.json",
+      "sha256": "c55030de2cfb5f17ef85f8576035dab81b0f9e75babf585b5abf0758c59e0110",
+      "sizeBytes": 5544
     },
     {
       "path": "packages/win-server-NET-001/Configuration.ps1",
@@ -800,18 +1038,28 @@
     },
     {
       "path": "packages/win-server-NET-001/hydrate-policy.ps1",
-      "sha256": "1fcb800eb5097e1fb32a7f2ac458c99629acf225ed01fc36649fd876da05dcfa",
-      "sizeBytes": 7058
+      "sha256": "b0850b091433d8e5c14ea7afef4822e51a9c232e8b61f25fc2b72b348bb0e90e",
+      "sizeBytes": 8777
+    },
+    {
+      "path": "packages/win-server-NET-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "a71713515681acf59a2527143c30b3a2af2fc207196894202616a775a5f4b02b",
+      "sizeBytes": 6099
     },
     {
       "path": "packages/win-server-NET-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "e87b4a1c632be43572de500420dcf2ce037a3f835dbd0902c27385bd4efa9b92",
-      "sizeBytes": 6511
+      "sha256": "861feb53fd40e5976924f9836479dab28d7391d4e753c5b5645335765036537a",
+      "sizeBytes": 6482
     },
     {
       "path": "packages/win-server-NET-001/policy/deployIfNotExists.json",
-      "sha256": "1621be0307d4a2891d09dc1ac9bde27f6a5166510d3b8a728bf52f7311ea2773",
-      "sizeBytes": 4414
+      "sha256": "779217d0f5151978181629121985bdc36940b4b7dc6a18ae309103700196f40c",
+      "sizeBytes": 5856
+    },
+    {
+      "path": "packages/win-server-NET-001/policy/deployIfNotExists.portal.json",
+      "sha256": "e117e2ab1a840a1e044619790d5574d41e826eadddb93b895912af39271597be",
+      "sizeBytes": 5504
     },
     {
       "path": "packages/win-server-NET-002/Configuration.ps1",
@@ -830,18 +1078,28 @@
     },
     {
       "path": "packages/win-server-NET-002/hydrate-policy.ps1",
-      "sha256": "30a48e597a928da47250628395952c498d45c0cdf86cb5ba33de5a2b98aeefa5",
-      "sizeBytes": 7092
+      "sha256": "a2056ef9c6da2dcc4bd577a6e6d9a10083d228ce01a81b9a9fc0a58ce1104a93",
+      "sizeBytes": 8811
+    },
+    {
+      "path": "packages/win-server-NET-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "47a0be37a4a372ed025b0542bd59222ee70ac32fe9dc67b91de4b43deb4bd699",
+      "sizeBytes": 6147
     },
     {
       "path": "packages/win-server-NET-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "32c3b68d269f0d253b72d7896581b0804982a9af242e43e78ce9cda1bba2ac4b",
-      "sizeBytes": 6559
+      "sha256": "407c8bb95acc2520330475d408564133a052387e79939707a07e8ff7dcf87641",
+      "sizeBytes": 6530
     },
     {
       "path": "packages/win-server-NET-002/policy/deployIfNotExists.json",
-      "sha256": "f373728bc0ad3b92781fc2d767a6eeba74b654d9ae2ffe1be75c6ad59a133160",
-      "sizeBytes": 4462
+      "sha256": "4c8f4e343bf283c1368b48343713b0290ff47b34b3153f0a7dd336cbb07f8f4c",
+      "sizeBytes": 5904
+    },
+    {
+      "path": "packages/win-server-NET-002/policy/deployIfNotExists.portal.json",
+      "sha256": "22ac1e41a470783da8929a153dc0c6470435ddee8c979b7dfb3b2dfd753465b2",
+      "sizeBytes": 5552
     },
     {
       "path": "packages/win-server-RDP-001/Configuration.ps1",
@@ -860,18 +1118,28 @@
     },
     {
       "path": "packages/win-server-RDP-001/hydrate-policy.ps1",
-      "sha256": "68fc44eec8a2e39c3497b451977ee968291489cab136bb9037149b4830a35c68",
-      "sizeBytes": 7389
+      "sha256": "6b062067839c5e2b78732479a9d2b2ab04f9d245188b269e7c4b3b1d5775c474",
+      "sizeBytes": 9108
+    },
+    {
+      "path": "packages/win-server-RDP-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "d357848fc0061f23bb15e58ea6f1f85af819937a8356bc936410a1b3a8f316fb",
+      "sizeBytes": 6325
     },
     {
       "path": "packages/win-server-RDP-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "b07eb359b8a85a155455e7cbefc60019d6eda8ea7c16a9355a7111e127158f4b",
-      "sizeBytes": 6737
+      "sha256": "14da7e890b4ca604fb232a92e3b9d8081de302b0176de7fe26a57cff89ba5fdc",
+      "sizeBytes": 6708
     },
     {
       "path": "packages/win-server-RDP-001/policy/deployIfNotExists.json",
-      "sha256": "aac255c1e1e264727b72085180d62fe77d3c97e8dede586254f4d4bd5eb9748a",
-      "sizeBytes": 4640
+      "sha256": "1c9938e646c30fc7f7bffa5e2eca4f28f6f93bb26fe7f8fa643ca0b6c34fefa4",
+      "sizeBytes": 6082
+    },
+    {
+      "path": "packages/win-server-RDP-001/policy/deployIfNotExists.portal.json",
+      "sha256": "0e47d686a2ffb37e3e60169409e2237937321aafee946df42d7cd31f80d71765",
+      "sizeBytes": 5730
     },
     {
       "path": "packages/win-server-RDP-002/Configuration.ps1",
@@ -890,18 +1158,28 @@
     },
     {
       "path": "packages/win-server-RDP-002/hydrate-policy.ps1",
-      "sha256": "bf1227747b4cbc7a7970722e1b3577d8eff4bffa5e02e232031f0252082d1df5",
-      "sizeBytes": 7099
+      "sha256": "c334fd46c0f2862b5b4781b237c54b3055791805f146a22509768155f99bdbc7",
+      "sizeBytes": 8818
+    },
+    {
+      "path": "packages/win-server-RDP-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "a54ce94b6dcd675be93c30e943158c27b160fa5dad282757d83d5b217477e17c",
+      "sizeBytes": 6132
     },
     {
       "path": "packages/win-server-RDP-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "be32dd6b51d8de0cb4a093436c7c897474e1e9c0f4a929180c27935d4a38fd35",
-      "sizeBytes": 6544
+      "sha256": "17eb8652e93b426ef784badbae89ef777e63964619627a3eea9d22327626edc8",
+      "sizeBytes": 6515
     },
     {
       "path": "packages/win-server-RDP-002/policy/deployIfNotExists.json",
-      "sha256": "80350f63609e2b72f527c05b5b057893ecbec735c940c3cb486ee722b79b60b7",
-      "sizeBytes": 4447
+      "sha256": "bf77d0b720b8cf233c1e1f55e70f689736c791e0f36198d6392fe4bba5a4b94e",
+      "sizeBytes": 5889
+    },
+    {
+      "path": "packages/win-server-RDP-002/policy/deployIfNotExists.portal.json",
+      "sha256": "af279cad337508263dd6be4cb5a8b31b26e7516c98c7d24547c7652a8b934a61",
+      "sizeBytes": 5537
     },
     {
       "path": "packages/win-server-RDP-003/Configuration.ps1",
@@ -920,18 +1198,28 @@
     },
     {
       "path": "packages/win-server-RDP-003/hydrate-policy.ps1",
-      "sha256": "4ae4cab5f4afd3e3628e823476d9e30d20cc9808331e1a1d9fa65806b6cf5ddb",
-      "sizeBytes": 7086
+      "sha256": "22d1f65c691eb18dc2cc48da065b018d5935ddd6b9aca7ff950e937dfc1dc0dd",
+      "sizeBytes": 8805
+    },
+    {
+      "path": "packages/win-server-RDP-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "ece315138472a4c82a30b944ebb1a8bae4586681c2484a4528af0a4d5f15cda5",
+      "sizeBytes": 6127
     },
     {
       "path": "packages/win-server-RDP-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "47f155befab876cfd49b3681ecde168a6bb8d1d7a24b8b206a19a1f5c9e8a700",
-      "sizeBytes": 6539
+      "sha256": "f3398c8368f6ff84e6160a87f590ab67ef2d305e0ad23d7c2d6173073527284d",
+      "sizeBytes": 6510
     },
     {
       "path": "packages/win-server-RDP-003/policy/deployIfNotExists.json",
-      "sha256": "2d01977c795420537438ffe9c291719e672d378b42ce2d40863da38cb206565c",
-      "sizeBytes": 4442
+      "sha256": "338a2915850fa12e3661dfe43b7532747f909a035edcc7cdbbc44ddf0dbcc6d2",
+      "sizeBytes": 5884
+    },
+    {
+      "path": "packages/win-server-RDP-003/policy/deployIfNotExists.portal.json",
+      "sha256": "e95afa316eb2fc8d5bd15132d3c8912d274ae0bb9f0c7fb7e62928e0335974de",
+      "sizeBytes": 5532
     },
     {
       "path": "packages/win-server-SECO-001/Configuration.ps1",
@@ -950,18 +1238,28 @@
     },
     {
       "path": "packages/win-server-SECO-001/hydrate-policy.ps1",
-      "sha256": "968fb803dd05f9c6b8aab3ddc87a5d801e73795923804002998c3a5df5fdbf72",
-      "sizeBytes": 7242
+      "sha256": "4517e7d070f44ad7f8ae96569ab215d234bc57c4431b12b0259cecd30f4ad3db",
+      "sizeBytes": 8961
+    },
+    {
+      "path": "packages/win-server-SECO-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "7d42d2730811cb0ffaa51b2e12bf71909b62cc2a9da7a2a19e23886b292a9cc8",
+      "sizeBytes": 6203
     },
     {
       "path": "packages/win-server-SECO-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "c289666e9b0d94e046c70f679916ebc948923ff449ccb277e82489e4cd9e3416",
-      "sizeBytes": 6614
+      "sha256": "51971f7a1a5ad5df5aac5fc50220e4f619d0bfc9a17df2ac1f4c31672bc42afa",
+      "sizeBytes": 6586
     },
     {
       "path": "packages/win-server-SECO-001/policy/deployIfNotExists.json",
-      "sha256": "42de0901453cd80311aa380e4ed4fd25622a3537e6e34f3c4b04ac9bbcf4e0cc",
-      "sizeBytes": 4517
+      "sha256": "068e4ceb351cb3f85f2e81439db15b32a0e43cd96c65c1cf2ac8068ca250884d",
+      "sizeBytes": 5960
+    },
+    {
+      "path": "packages/win-server-SECO-001/policy/deployIfNotExists.portal.json",
+      "sha256": "f462a20444bee587fd61a11d1370e2f33d0b75f039fe4c338d666822791ad8ff",
+      "sizeBytes": 5608
     },
     {
       "path": "packages/win-server-SECO-002/Configuration.ps1",
@@ -980,18 +1278,28 @@
     },
     {
       "path": "packages/win-server-SECO-002/hydrate-policy.ps1",
-      "sha256": "3f5f8d99eb4a2bdaf3f371ee5b81fd81220e9f4653845b12f89ffcf4d24037f2",
-      "sizeBytes": 7067
+      "sha256": "792ce248ebad331e218f485753074df30bd9b0d7b1d41e029fa88e6447a7beaa",
+      "sizeBytes": 8786
+    },
+    {
+      "path": "packages/win-server-SECO-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "458f930ae39ef7eb0e32600661890168e08c2edba3a89a52e3cb257662a785dc",
+      "sizeBytes": 6116
     },
     {
       "path": "packages/win-server-SECO-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "04da63f57a72e9996bb40b054124620b546982763c91945dde6619342b878a1d",
-      "sizeBytes": 6527
+      "sha256": "8f661cbb02ff9f4dbfb37d0dc345d0799dcfec943c5a17c3c91b005b68a68ad1",
+      "sizeBytes": 6499
     },
     {
       "path": "packages/win-server-SECO-002/policy/deployIfNotExists.json",
-      "sha256": "342dd2d4960ff6b9fd398f92ae04cd4399c16421934c8858903fb86e9807a195",
-      "sizeBytes": 4430
+      "sha256": "543590abf85f952979f0618b07017ebb3632862ce9ebca469311528e19c0b4be",
+      "sizeBytes": 5873
+    },
+    {
+      "path": "packages/win-server-SECO-002/policy/deployIfNotExists.portal.json",
+      "sha256": "b1defa23b497a9e76066cafa220435ca4dd43ce39d13ee1baaa80cabede8980a",
+      "sizeBytes": 5521
     },
     {
       "path": "packages/win-server-SECO-003/Configuration.ps1",
@@ -1010,18 +1318,28 @@
     },
     {
       "path": "packages/win-server-SECO-003/hydrate-policy.ps1",
-      "sha256": "3c8c6c7cfa2767094cf3984215bf061fcd21bb4197b6a94513999b9285c6cce9",
-      "sizeBytes": 7272
+      "sha256": "4de3c683d8bfe6bf404ca1ebb5e8f2566d01ad86984b90063d7cf328f96d8f79",
+      "sizeBytes": 8991
+    },
+    {
+      "path": "packages/win-server-SECO-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "eb1954bc168cac816ac590b1f9b20d948d82cd0f759ce2018b27b13ed36f86fc",
+      "sizeBytes": 6230
     },
     {
       "path": "packages/win-server-SECO-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "ba20a41e28788168ceb469c619aea63dc2f90e70fc84eee4a106fb35428b414c",
-      "sizeBytes": 6641
+      "sha256": "7249c3ee68294329b82171d475723f2dd6bbd1d507119b9af919769a59ff32e3",
+      "sizeBytes": 6613
     },
     {
       "path": "packages/win-server-SECO-003/policy/deployIfNotExists.json",
-      "sha256": "364730159f0e326dcb8324862c9ad9f636c10bb732e7705cd0f7810a93388017",
-      "sizeBytes": 4544
+      "sha256": "066eedb541d84e6a218b5ed9ce475e5b97b0d07e5eba0b9b7bca1405a5725135",
+      "sizeBytes": 5987
+    },
+    {
+      "path": "packages/win-server-SECO-003/policy/deployIfNotExists.portal.json",
+      "sha256": "49cb06c12de524e1d57a4a9067301604c68dbcb211a054fde051d154e78bc2e5",
+      "sizeBytes": 5635
     },
     {
       "path": "packages/win-server-SECO-004/Configuration.ps1",
@@ -1040,18 +1358,28 @@
     },
     {
       "path": "packages/win-server-SECO-004/hydrate-policy.ps1",
-      "sha256": "0a0e5f5a3537d1471edd7f79b02f74e485852eeb4393b178cd6bcf086f584e57",
-      "sizeBytes": 7099
+      "sha256": "4b103e12dd586ff513d508c0760e6e15a95c83348d5e9720a18c0f015d73310a",
+      "sizeBytes": 8818
+    },
+    {
+      "path": "packages/win-server-SECO-004/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "07d07bab0b3eacaafb69c7a67df78629cec3610360c21342e6e5e3c0fcb7a7f6",
+      "sizeBytes": 6879
     },
     {
       "path": "packages/win-server-SECO-004/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "70859182f063f4e45820fc22235d4c40b16700ff3c137972542b13381841390d",
-      "sizeBytes": 7334
+      "sha256": "9fa08bd87634be6ef2985be06b109c503afec0f9dc784e49ba9be94f1ceb16b7",
+      "sizeBytes": 7305
     },
     {
       "path": "packages/win-server-SECO-004/policy/deployIfNotExists.json",
-      "sha256": "78e240b193026188e52b0eadf91b97a0354ca19b36e84885b6b76f989b38481f",
-      "sizeBytes": 5237
+      "sha256": "9db7156bc7d19404490b8498316540309e2c2d4eb8eee26ca00f1f25ce19d9f2",
+      "sizeBytes": 6679
+    },
+    {
+      "path": "packages/win-server-SECO-004/policy/deployIfNotExists.portal.json",
+      "sha256": "cce691f7b40ba5b8cc4898dd081041c71e5c35429151cb90a187ade9fd37b5e5",
+      "sizeBytes": 6285
     },
     {
       "path": "packages/win-server-SECO-005/Configuration.ps1",
@@ -1070,18 +1398,28 @@
     },
     {
       "path": "packages/win-server-SECO-005/hydrate-policy.ps1",
-      "sha256": "8c12bd3b49cecf5d78801574b8e1dd386755df283f5d2ef9ea5bf93f5158b9c5",
-      "sizeBytes": 7210
+      "sha256": "5f0f2ed1ba64371936927c634cfec976157fe60895d040eaa6239b835106c68e",
+      "sizeBytes": 8929
+    },
+    {
+      "path": "packages/win-server-SECO-005/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "5a0c909cf041defd563078bc3db0e029e8175ebb49d8a110f9344910fd27578d",
+      "sizeBytes": 6185
     },
     {
       "path": "packages/win-server-SECO-005/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "65d8f131be37cdd475cf523a4841ee02ab06b4a460cafbc53b5de698995cde59",
-      "sizeBytes": 6598
+      "sha256": "06c953623623324c9d49a5abf91e2c988385cbe75c7e88e85a09b433b8710656",
+      "sizeBytes": 6569
     },
     {
       "path": "packages/win-server-SECO-005/policy/deployIfNotExists.json",
-      "sha256": "38292a3be3b62b738fda47c005adbdf0d8d509f7fc5c483ebec74d07bae6ae0e",
-      "sizeBytes": 4501
+      "sha256": "6c862d31a5690822de79696282d350235be0505c82db0693ff663f57a335de7d",
+      "sizeBytes": 5943
+    },
+    {
+      "path": "packages/win-server-SECO-005/policy/deployIfNotExists.portal.json",
+      "sha256": "ca0cd26e0d19261b1fbb7f163b09747b27384e4132a3c088f6dd53fbbd3fe2cb",
+      "sizeBytes": 5591
     },
     {
       "path": "packages/win-server-SECO-006/Configuration.ps1",
@@ -1100,18 +1438,28 @@
     },
     {
       "path": "packages/win-server-SECO-006/hydrate-policy.ps1",
-      "sha256": "88ddb7f125a4c79f41e0145c1ddb1b28506bb8a1f604807632e5dbb736e5d2df",
-      "sizeBytes": 7254
+      "sha256": "c501ceb075f1a5227370757fe0af5ad46d00ef32ad29fbbae32b7b6a012434af",
+      "sizeBytes": 8973
+    },
+    {
+      "path": "packages/win-server-SECO-006/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "08d987ad199542398848bc430a50df18f3ca132a3a38e57657ea5ceb31f5e185",
+      "sizeBytes": 6207
     },
     {
       "path": "packages/win-server-SECO-006/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "f5070e9d686435431b2b3c422adeee92ae19dca16e16bd8cfe5bec69bb2e383a",
-      "sizeBytes": 6620
+      "sha256": "2c6e3975acd0ddab74dab8f6a813796e678f2fd5cd848afcf1107e4cbcca9eb9",
+      "sizeBytes": 6591
     },
     {
       "path": "packages/win-server-SECO-006/policy/deployIfNotExists.json",
-      "sha256": "30046f163387a0fa0f8be521c7f15aa2ff2416d4cd463c4fc606764fc45f464a",
-      "sizeBytes": 4523
+      "sha256": "12ec1c483d03a1bb660d32ec90d37c56e8b55a0accd31799b3ce5e7340a36322",
+      "sizeBytes": 5965
+    },
+    {
+      "path": "packages/win-server-SECO-006/policy/deployIfNotExists.portal.json",
+      "sha256": "c505d76cb4ef7299cae4cd1fc164fe8440d33bc2fa87d1d973a2ba980c752bdc",
+      "sizeBytes": 5613
     },
     {
       "path": "packages/win-server-SECO-007/Configuration.ps1",
@@ -1130,18 +1478,28 @@
     },
     {
       "path": "packages/win-server-SECO-007/hydrate-policy.ps1",
-      "sha256": "8261d7edbc1f1f2b0f860dddfc60b03a63d8b6dbde491533921b090c53419583",
-      "sizeBytes": 7207
+      "sha256": "ac179319b121833eb99a611ded0beb126382aa89f8a62bf2fbec736529d8ef20",
+      "sizeBytes": 8926
+    },
+    {
+      "path": "packages/win-server-SECO-007/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "5a3c4fd7c9ce4f80d7c00c75d4fafef7ec0e0f5e40d0a716607f5e35092279d2",
+      "sizeBytes": 6184
     },
     {
       "path": "packages/win-server-SECO-007/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "3ced3d674beafdbbed5c8186d88d4cd14544cad26befee8a8c5a8d9968e9b368",
-      "sizeBytes": 6597
+      "sha256": "5bb9b9adf4ed8b025be02fb4a1cf9157356bb5cbdb37c2cf5831dcd2e11a751e",
+      "sizeBytes": 6568
     },
     {
       "path": "packages/win-server-SECO-007/policy/deployIfNotExists.json",
-      "sha256": "2f857e2283e10186a9468560fb96e3e3da3e92b3c9d90e2ac0c447633a718109",
-      "sizeBytes": 4500
+      "sha256": "70eb32ae53d16402ff891bc33bdb2a34ed8fad6c6da76c43c2d0ae648a8b262a",
+      "sizeBytes": 5942
+    },
+    {
+      "path": "packages/win-server-SECO-007/policy/deployIfNotExists.portal.json",
+      "sha256": "e188b440afdf20826cf5d61550307d2e6f58223e7abb2b79e66b3ee139b5fe08",
+      "sizeBytes": 5590
     },
     {
       "path": "packages/win-server-SECO-008/Configuration.ps1",
@@ -1160,18 +1518,28 @@
     },
     {
       "path": "packages/win-server-SECO-008/hydrate-policy.ps1",
-      "sha256": "499f43ede340b97ed9f7755b715eb7dad7612071643a9a86ea90c2011940fd43",
-      "sizeBytes": 7254
+      "sha256": "5e4435b37d1f0fe1a9f35b30c5d711760a4d84b8c6e208294359333f8ee990f5",
+      "sizeBytes": 8973
+    },
+    {
+      "path": "packages/win-server-SECO-008/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "e114ef403de8cba3b2fb24a4231dde80b9c6ba23e4db82fbfd3f270ac931c6c3",
+      "sizeBytes": 6207
     },
     {
       "path": "packages/win-server-SECO-008/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "f1cadadab77af8367a2660df39dc741622af36ba43324dbc35b9395162e7aac3",
-      "sizeBytes": 6620
+      "sha256": "4628bb7df5d95dc0b337d91489d97a74e886dffe3ea645e53ad56925839204ec",
+      "sizeBytes": 6591
     },
     {
       "path": "packages/win-server-SECO-008/policy/deployIfNotExists.json",
-      "sha256": "0c375f4eb8942d08e570e9558ad162fee1b97165b0abc85eb793634852943a23",
-      "sizeBytes": 4523
+      "sha256": "ed622712e08023cb74118d6d4ddcd1c6180177b34dd53aa577ce1385cb5c77dd",
+      "sizeBytes": 5965
+    },
+    {
+      "path": "packages/win-server-SECO-008/policy/deployIfNotExists.portal.json",
+      "sha256": "ce00e32d6e828ee86acc79cf91b62832d0bbcef17ecf9849ff12e7fe1c071db5",
+      "sizeBytes": 5613
     },
     {
       "path": "packages/win-server-SECO-009/Configuration.ps1",
@@ -1190,18 +1558,28 @@
     },
     {
       "path": "packages/win-server-SECO-009/hydrate-policy.ps1",
-      "sha256": "1b102c2e84a9ca567fb01b377d8cd22bb36fb953eaabda8da63a6420c0e5d13b",
-      "sizeBytes": 7182
+      "sha256": "c60d72190dba692c2d790703482293ecaeb0030734e231a6103643d61a634dab",
+      "sizeBytes": 8901
+    },
+    {
+      "path": "packages/win-server-SECO-009/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "2806d1d44d8b9ebdf48d1bc77e1738348bab2db3dca684a5d0092eed114c0b92",
+      "sizeBytes": 6189
     },
     {
       "path": "packages/win-server-SECO-009/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "c951bf7f8ca26450e50298457993af57184f0da3089578e503ed66de89c98d0d",
-      "sizeBytes": 6602
+      "sha256": "f2bfd79e5c9b749f9c3d362c0c7e0095669a019dd839230aa6bbc2ee9402ce97",
+      "sizeBytes": 6573
     },
     {
       "path": "packages/win-server-SECO-009/policy/deployIfNotExists.json",
-      "sha256": "2e29f2ea04305ef745b6c3d7a25d2ab0dc2e835504767526f51e150a4095c70a",
-      "sizeBytes": 4505
+      "sha256": "dcb6262e0135a86a6047cf5fadafbba8083485ff7001b03305bca70a774a32c3",
+      "sizeBytes": 5947
+    },
+    {
+      "path": "packages/win-server-SECO-009/policy/deployIfNotExists.portal.json",
+      "sha256": "f86f8e154a7d18374e18e959484fe981a1259cd93e84b4683586e5f5c7254d94",
+      "sizeBytes": 5595
     },
     {
       "path": "packages/win-server-SECO-010/Configuration.ps1",
@@ -1220,18 +1598,28 @@
     },
     {
       "path": "packages/win-server-SECO-010/hydrate-policy.ps1",
-      "sha256": "2233dbef84352614d5bcbc4bbcd1f2c0c9f227c49d297c4f4060c586ec1a7901",
-      "sizeBytes": 7366
+      "sha256": "bc4263c1cd45b4759a949755e374f5b16f5575a43367d467485a29fee0b6399d",
+      "sizeBytes": 9085
+    },
+    {
+      "path": "packages/win-server-SECO-010/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "cd1c5d1162acf23cfd0d6c00df25b752d000501cc4be6780b67904cb23c37207",
+      "sizeBytes": 6289
     },
     {
       "path": "packages/win-server-SECO-010/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "654778209aedb3c312fbded9daf31f3a111dc2eb02e14d4a3f5c3ff357696962",
-      "sizeBytes": 6702
+      "sha256": "9638097727fe91f19748a2b8b298f4406fb1b3af3d979a942c406bec3086ef9f",
+      "sizeBytes": 6673
     },
     {
       "path": "packages/win-server-SECO-010/policy/deployIfNotExists.json",
-      "sha256": "157ca9d477cb15b942dd6dc6e86acd0c03aed4f34c6eba7726b3862488e49e2f",
-      "sizeBytes": 4605
+      "sha256": "7e8642bb5aa31cc98a6a9e1fc73e2faa46b103ac93a8c3fe36b8f51bcc9e8916",
+      "sizeBytes": 6047
+    },
+    {
+      "path": "packages/win-server-SECO-010/policy/deployIfNotExists.portal.json",
+      "sha256": "7c7bd2a40f2d9bd3ff3c090f4cc365a1ca2e093e68db240b2a915197dba09af2",
+      "sizeBytes": 5695
     },
     {
       "path": "packages/win-server-SECO-011/Configuration.ps1",
@@ -1250,18 +1638,28 @@
     },
     {
       "path": "packages/win-server-SECO-011/hydrate-policy.ps1",
-      "sha256": "ba287a883e580413a3053cf7fd3b16b878f56cd2b505a0b92a0937e3ca96d484",
-      "sizeBytes": 7366
+      "sha256": "4adccb29d6f4ed951cfcd356718e7051073d1487478acbd7d78fbc1074a77020",
+      "sizeBytes": 9085
+    },
+    {
+      "path": "packages/win-server-SECO-011/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "5adea346dc60281680f8f077a9f114d1a979b075d4aa2160a554cf9cf9ce4dc8",
+      "sizeBytes": 6289
     },
     {
       "path": "packages/win-server-SECO-011/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "742d5ab4f5c317e3752b98e06a6153f2ee4b9d57935c0eaa15aa00d380793925",
-      "sizeBytes": 6702
+      "sha256": "9807dfd304b0da00af3569bad4979cae8131af717eda988fbdcb4045b5ddc074",
+      "sizeBytes": 6673
     },
     {
       "path": "packages/win-server-SECO-011/policy/deployIfNotExists.json",
-      "sha256": "01159846e088894537284eeb0cc4853139ead2eb7c5bde44ea66a4c53771faff",
-      "sizeBytes": 4605
+      "sha256": "2301385372d1d20bb522712b0706d2dc6ce6787138285f4ecc51743624013633",
+      "sizeBytes": 6047
+    },
+    {
+      "path": "packages/win-server-SECO-011/policy/deployIfNotExists.portal.json",
+      "sha256": "d724ea56b772afbd241560a13c778b201398b5d8fb2646a44e7c21b13aab39c7",
+      "sizeBytes": 5695
     },
     {
       "path": "packages/win-server-SECO-012/Configuration.ps1",
@@ -1280,18 +1678,28 @@
     },
     {
       "path": "packages/win-server-SECO-012/hydrate-policy.ps1",
-      "sha256": "a45bc5b98d4eb0fbd37faaeddee4f9ff1b6d04bc2f250e4e3c0c5264c520ae7e",
-      "sizeBytes": 7257
+      "sha256": "c6ba9f18154c0fc832fb22c9ea01163c82ee27e7770365a85092ddf775e96a22",
+      "sizeBytes": 8976
+    },
+    {
+      "path": "packages/win-server-SECO-012/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "c94aa32b0d36d04a9da48ba71199732dc58c5c3dbc1fb6ca188aacb2b42149e6",
+      "sizeBytes": 6236
     },
     {
       "path": "packages/win-server-SECO-012/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "73b1ed4bedf5fc1c5bda2983964e3440746230f1b16be5bcc483944dde62dcdd",
-      "sizeBytes": 6649
+      "sha256": "b0d519387dd4b37472acf1b306d35d82fb02df3d90427548fda2b056d7f73820",
+      "sizeBytes": 6620
     },
     {
       "path": "packages/win-server-SECO-012/policy/deployIfNotExists.json",
-      "sha256": "0b8baa82d61605a2ceeb3fcfbeeb33cffb1c8c16102ec7782a52e7bd9d27f358",
-      "sizeBytes": 4552
+      "sha256": "bf668a134d190799652b58847b035db507484f47022ac8b2ff048eda44f863ea",
+      "sizeBytes": 5994
+    },
+    {
+      "path": "packages/win-server-SECO-012/policy/deployIfNotExists.portal.json",
+      "sha256": "cd52965a9f13e8c5de63a516e5f92a81207ed01a70e1633987d801d9ed306989",
+      "sizeBytes": 5642
     },
     {
       "path": "packages/win-server-SECO-013/Configuration.ps1",
@@ -1310,18 +1718,28 @@
     },
     {
       "path": "packages/win-server-SECO-013/hydrate-policy.ps1",
-      "sha256": "a3abd5a860b807e3f622e97d21b05d52b6ebe6a4779637c4e4999e06af26be08",
-      "sizeBytes": 7256
+      "sha256": "1eed0b76bccb8df42b80f715a81b583c84a31308c4bfacd2b5bd831d92519a40",
+      "sizeBytes": 8975
+    },
+    {
+      "path": "packages/win-server-SECO-013/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "f3fbce8953ac2206e242339dfa38f589f765247145906859ba67298057061b34",
+      "sizeBytes": 6235
     },
     {
       "path": "packages/win-server-SECO-013/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "6e5d7007a7572f64ce572f8e4825b92efa7796bcc0e9218478d25895461392c1",
-      "sizeBytes": 6648
+      "sha256": "11f73e43b2d1196747ec6731200dc6bb84a7fcc40b587f2a4d2e9dd6541d282a",
+      "sizeBytes": 6619
     },
     {
       "path": "packages/win-server-SECO-013/policy/deployIfNotExists.json",
-      "sha256": "ea997ebdfd679193e8bf5dc30e1a75e75b16bb462570a2ed05c624f3edaa3240",
-      "sizeBytes": 4551
+      "sha256": "1eac6f2ac99adee01d7b2d8302c885aa09b5241c92fdf14d66956ffb30935cfe",
+      "sizeBytes": 5993
+    },
+    {
+      "path": "packages/win-server-SECO-013/policy/deployIfNotExists.portal.json",
+      "sha256": "32e2337c88956be86b816a8f86c93a6cad925e4a8803923f0d5e4bfd9ed2fa7a",
+      "sizeBytes": 5641
     },
     {
       "path": "packages/win-server-SECO-014/Configuration.ps1",
@@ -1340,18 +1758,28 @@
     },
     {
       "path": "packages/win-server-SECO-014/hydrate-policy.ps1",
-      "sha256": "727944db0de65113ea84f55543aeb80a2a6de3082a8db93c20a8ee2dfeb4fad7",
-      "sizeBytes": 7138
+      "sha256": "bc66f3c91ae41e2c3044507b4c1dd823d917cb01b097d976977ae1b6238347f3",
+      "sizeBytes": 8857
+    },
+    {
+      "path": "packages/win-server-SECO-014/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "d356063460f0de670c07d87b2090a93f5898b2c37b56e72f8617abf33261ff79",
+      "sizeBytes": 6149
     },
     {
       "path": "packages/win-server-SECO-014/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "17c04fcc70cddcc6f33f6df979d8bba6257a8d44049afc08e68b8e83061cac1c",
-      "sizeBytes": 6562
+      "sha256": "dcd97a24d680c139fe5b7953ceef50bacfa8634fb2c03abb876ed3c2d627801d",
+      "sizeBytes": 6533
     },
     {
       "path": "packages/win-server-SECO-014/policy/deployIfNotExists.json",
-      "sha256": "f2c0acefb364bede1e7dd5251b6a1006414369979b2626dd174e74535b4ec15f",
-      "sizeBytes": 4465
+      "sha256": "ff85180081bd3c25e54f0f2668b5679433fb7477955ee7f7c88c6412be46f21a",
+      "sizeBytes": 5907
+    },
+    {
+      "path": "packages/win-server-SECO-014/policy/deployIfNotExists.portal.json",
+      "sha256": "2dd0bbf4ad8e51f60058c4ff5689646b3f20bcd289120459ddc1d1d15c526ade",
+      "sizeBytes": 5555
     },
     {
       "path": "packages/win-server-SECO-015/Configuration.ps1",
@@ -1370,18 +1798,28 @@
     },
     {
       "path": "packages/win-server-SECO-015/hydrate-policy.ps1",
-      "sha256": "9bcd02bcbd87dac76e696999e356fce2a79f5029188c09132c12943ef659fe79",
-      "sizeBytes": 7154
+      "sha256": "0162e7a2ad2aa858a0fb4086bd8ef951f6e3fb868835c6e34ed255e535b37fb4",
+      "sizeBytes": 8873
+    },
+    {
+      "path": "packages/win-server-SECO-015/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "0375fe264dfdc387a6df4b1ac86ecce52708fdeca2dc3cde25249712a97b5580",
+      "sizeBytes": 6169
     },
     {
       "path": "packages/win-server-SECO-015/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "2ecf0770e55f101df6c58f27cc416262a0b2aa546e2da413e9e0b08497843b8e",
-      "sizeBytes": 6582
+      "sha256": "c406d6bf21723e00ed0e4c6f87016da08c74dae245b63633d8ff25ef4bbee10d",
+      "sizeBytes": 6553
     },
     {
       "path": "packages/win-server-SECO-015/policy/deployIfNotExists.json",
-      "sha256": "efe3a2b67d3c6bf98cee58a9aaecbf4c9799796d7608b3f9e8c00950d6227292",
-      "sizeBytes": 4485
+      "sha256": "cdb312e850883e0b3eb3e023ed724327da5e77ea55d1839a548d1cfaaa551987",
+      "sizeBytes": 5927
+    },
+    {
+      "path": "packages/win-server-SECO-015/policy/deployIfNotExists.portal.json",
+      "sha256": "455ce20000a0252b25e6c2e94f8bc87e1fe0bad5e40609745f9e1260a5b5d1b9",
+      "sizeBytes": 5575
     },
     {
       "path": "packages/win-server-SECO-016/Configuration.ps1",
@@ -1400,18 +1838,28 @@
     },
     {
       "path": "packages/win-server-SECO-016/hydrate-policy.ps1",
-      "sha256": "77b47e73dd1652af97094071bed589fbeb53d26f67f055eaf3ea710b0607e765",
-      "sizeBytes": 7135
+      "sha256": "2855833d28d8523ffb537f3393f5d270917a8ab887921e21f5f2dd60df2e1103",
+      "sizeBytes": 8854
+    },
+    {
+      "path": "packages/win-server-SECO-016/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "adaf449fe2fbbe3f045a95990f5b97a88ca85925628866b7fc2e04689f7a75ec",
+      "sizeBytes": 6156
     },
     {
       "path": "packages/win-server-SECO-016/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "1e99117f51d419414adc42d65d6b17dbf2958e9bad46c146b8d4c2390416df12",
-      "sizeBytes": 6569
+      "sha256": "5770abd67d8cca060f121bc4929fdb49cc1156f1f7f417c089471d202315b6ce",
+      "sizeBytes": 6540
     },
     {
       "path": "packages/win-server-SECO-016/policy/deployIfNotExists.json",
-      "sha256": "d501837041b46e2f536571065c862a352da97f68455545d18fce5b9e34d04b6a",
-      "sizeBytes": 4472
+      "sha256": "ae901750ba9f6be952b6e41405ead65d63f2f3f9e5a28fc4abb2c6f0d4155814",
+      "sizeBytes": 5914
+    },
+    {
+      "path": "packages/win-server-SECO-016/policy/deployIfNotExists.portal.json",
+      "sha256": "1368eb473f1cafe8269cd3adf7fe220de3d7d31aa476a915f4f3f176d3bdef0b",
+      "sizeBytes": 5562
     },
     {
       "path": "packages/win-server-SECO-017/Configuration.ps1",
@@ -1430,18 +1878,28 @@
     },
     {
       "path": "packages/win-server-SECO-017/hydrate-policy.ps1",
-      "sha256": "07f05992de61b9ab23bb8cfce8df0b76cc87c2351ab16efd2319377778198979",
-      "sizeBytes": 7199
+      "sha256": "86676cd0f18fe4443ebc35ae4cc6e655088af36487ff69cb28b59aa66857075c",
+      "sizeBytes": 8918
+    },
+    {
+      "path": "packages/win-server-SECO-017/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "a4d0b58233ba1c222dec3c742cd8c6c70ff3861823ea779f71997fc38e29231f",
+      "sizeBytes": 6182
     },
     {
       "path": "packages/win-server-SECO-017/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "af24696deb6643f169141d0d3f4f01d292325440970fce44a1174ddb7651fb96",
-      "sizeBytes": 6593
+      "sha256": "a60615b9bca97a8e83afd31c67e6abe66303da5686ea8125afbe0bef74f8edbc",
+      "sizeBytes": 6565
     },
     {
       "path": "packages/win-server-SECO-017/policy/deployIfNotExists.json",
-      "sha256": "615f8d46c568d4861a9b2fe34906ce6457ecfb015973178c7103133b04d1b9db",
-      "sizeBytes": 4496
+      "sha256": "0049ef2b8928592926498982596c84badf1d84d4459bfa6f8f5ec78cc03602d6",
+      "sizeBytes": 5939
+    },
+    {
+      "path": "packages/win-server-SECO-017/policy/deployIfNotExists.portal.json",
+      "sha256": "706f30655d4f09aeb2c70c6b4a1d29e9b8be16f1115a41369c8ba1fb1f1bfbcc",
+      "sizeBytes": 5587
     },
     {
       "path": "packages/win-server-UAC-001/Configuration.ps1",
@@ -1460,18 +1918,28 @@
     },
     {
       "path": "packages/win-server-UAC-001/hydrate-policy.ps1",
-      "sha256": "36316ee24e52a52eaeb350e2f97b60b80fa48a6b5d11ad72a9bbcd2d685d4393",
-      "sizeBytes": 7209
+      "sha256": "de175cfe15333a1a194413a59b2c26ee8c7c86f1f7242fbb468b8e8f580171a2",
+      "sizeBytes": 8928
+    },
+    {
+      "path": "packages/win-server-UAC-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "816b70769d98e52ce7e9a33a002815f7e4397d7da905ba1cc677037d01b55e59",
+      "sizeBytes": 6183
     },
     {
       "path": "packages/win-server-UAC-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "d3682bb0107db1831c98285e2f6e681e2e01febd2ccfe849fb98e7dd68a07245",
-      "sizeBytes": 6595
+      "sha256": "587f21f5918a192e803a6d31a72af73eee490a3ac69842e60f0c27cd4838e7a1",
+      "sizeBytes": 6566
     },
     {
       "path": "packages/win-server-UAC-001/policy/deployIfNotExists.json",
-      "sha256": "f025d9b638f637e59a79c7f137ff8c08a261d26628033ca8268c41e4c6119da9",
-      "sizeBytes": 4498
+      "sha256": "eead5e94e9b07f8dfab1a0ec1d2bafc35720dd6b6ac418f3881f7a7c9e7b72a2",
+      "sizeBytes": 5940
+    },
+    {
+      "path": "packages/win-server-UAC-001/policy/deployIfNotExists.portal.json",
+      "sha256": "e699dedfcd17259e05e3c49e686e6071868d2a330894508b906168bbccafc454",
+      "sizeBytes": 5588
     },
     {
       "path": "packages/win-server-UAC-002/Configuration.ps1",
@@ -1490,18 +1958,28 @@
     },
     {
       "path": "packages/win-server-UAC-002/hydrate-policy.ps1",
-      "sha256": "49866640b7ec6c45ebb97df0d2f21fe9093d9c4d137dd1a934c3467bc1f29b11",
-      "sizeBytes": 7257
+      "sha256": "8553337051dacabc08348e33f374b4f1d5ad114e5c676433aa4fcf6a744acfd6",
+      "sizeBytes": 8976
+    },
+    {
+      "path": "packages/win-server-UAC-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "f5f95cc96ef1951147d01ae7f407397b482d655f633f16399b0e5636e382cfb2",
+      "sizeBytes": 6207
     },
     {
       "path": "packages/win-server-UAC-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "9ae0be10de00b73dbb7c0f444250ef8b9e0c3282c5ff14a9805d8bad1d5ed9a0",
-      "sizeBytes": 6619
+      "sha256": "c3dd0a6116f30d1992b0db41dcc56e9919e5f81243b5de811a9d83403ab8c3c2",
+      "sizeBytes": 6590
     },
     {
       "path": "packages/win-server-UAC-002/policy/deployIfNotExists.json",
-      "sha256": "1449643a451de89137715fd3e09583541d5be31dbd4f3711e6262a398b54db4e",
-      "sizeBytes": 4522
+      "sha256": "15daabfa3d86c51653516b7ff3bf0ac096260c2dda118aceebf410d90f1f8032",
+      "sizeBytes": 5964
+    },
+    {
+      "path": "packages/win-server-UAC-002/policy/deployIfNotExists.portal.json",
+      "sha256": "0b570c68ea70f93c467b81b40eefc3ae84b12c4f50f35798546fa45a3479c56d",
+      "sizeBytes": 5612
     },
     {
       "path": "packages/win-server-UAC-003/Configuration.ps1",
@@ -1520,18 +1998,28 @@
     },
     {
       "path": "packages/win-server-UAC-003/hydrate-policy.ps1",
-      "sha256": "3eeddd67975eebc5c17395e7eed66afc229c6931276f2801d181bb577811b7a6",
-      "sizeBytes": 7358
+      "sha256": "1c8d19df6266e12b1f0e7fe86819f4f77b4b44658fff8da4b4918b817603a3ab",
+      "sizeBytes": 9077
+    },
+    {
+      "path": "packages/win-server-UAC-003/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "b0e278fef28470b6b52a9879380047ce3a580d67095c0e47e1d60b88ce4f0e60",
+      "sizeBytes": 6274
     },
     {
       "path": "packages/win-server-UAC-003/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "82617aed04414362d0a8a43f51669caff41e300c239a41f8b9235dbd732364cf",
-      "sizeBytes": 6686
+      "sha256": "e3f724b7100f5bfbd02b361281fad372bce102c6d3bc8025ea4585244d9efdc6",
+      "sizeBytes": 6657
     },
     {
       "path": "packages/win-server-UAC-003/policy/deployIfNotExists.json",
-      "sha256": "1a9fa479dc1d1546d5e4b90a5ee73f73be2480fb38710433a06c6f7645b32490",
-      "sizeBytes": 4589
+      "sha256": "02d79b883bed396b600bc8871bb6d0c6a3b72535c81677cae899f840266ad780",
+      "sizeBytes": 6031
+    },
+    {
+      "path": "packages/win-server-UAC-003/policy/deployIfNotExists.portal.json",
+      "sha256": "c6aec56ed4ae6df32bae1d6118f79b3d9e9558610307c977a06129d1930ef1c9",
+      "sizeBytes": 5679
     },
     {
       "path": "packages/win-server-WINRM-001/Configuration.ps1",
@@ -1550,18 +2038,28 @@
     },
     {
       "path": "packages/win-server-WINRM-001/hydrate-policy.ps1",
-      "sha256": "149b97cbbc9a6ec13c64b396c4594e7e50fc0e425676fd415156cd9e603bd2d2",
-      "sizeBytes": 7087
+      "sha256": "81c4fb0fdb498c654a54778665b9eca445b06546d52b10318625e4015042b694",
+      "sizeBytes": 8806
+    },
+    {
+      "path": "packages/win-server-WINRM-001/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "f564bb42c7c6080ae295952b51c4b03b10cee185be08e2391dcd1a04580a6190",
+      "sizeBytes": 6148
     },
     {
       "path": "packages/win-server-WINRM-001/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "d15efe7dd6f2a8627af92de314b82e8705acc471067ccc2b0c84f72894e597c5",
-      "sizeBytes": 6558
+      "sha256": "053f77cc80723f65ec75784c77860e72096ebcebff51f6ac346a8519b2090a25",
+      "sizeBytes": 6531
     },
     {
       "path": "packages/win-server-WINRM-001/policy/deployIfNotExists.json",
-      "sha256": "a73f75f640214514ff5e570d0d8741d012a0cec712d16f1f7fc4a8e8c77bd66e",
-      "sizeBytes": 4461
+      "sha256": "0816cddd483b6bc7e82dec989c7bec97d4b5de14ab282eac2cde67f1583a1417",
+      "sizeBytes": 5905
+    },
+    {
+      "path": "packages/win-server-WINRM-001/policy/deployIfNotExists.portal.json",
+      "sha256": "6ade8066fb37b1138bae2c46bed3babb68060e995730989504be5fb78929bf6d",
+      "sizeBytes": 5553
     },
     {
       "path": "packages/win-server-WINRM-002/Configuration.ps1",
@@ -1580,18 +2078,28 @@
     },
     {
       "path": "packages/win-server-WINRM-002/hydrate-policy.ps1",
-      "sha256": "907fe2b841fbc764e109c03e1e47dc46ffc99ddd48be45afd60fce7536ab06c8",
-      "sizeBytes": 7131
+      "sha256": "79176db4de8c1ea99d2bb6ede2eb8fb1c43c3d0b661c5d8430889df8d793a633",
+      "sizeBytes": 8850
+    },
+    {
+      "path": "packages/win-server-WINRM-002/policy/deployIfNotExists.enhanced.portal.json",
+      "sha256": "09cdadf0601fc76d61686e17cde5c72b7f9aeb1429368ecbe27a8ab3e482c165",
+      "sizeBytes": 6184
     },
     {
       "path": "packages/win-server-WINRM-002/policy/deployIfNotExists.enhanced.sample.json",
-      "sha256": "382779e537084bf67c51e692c0968132a14aaa18975d5a0490ad0cae9b9f8e8c",
-      "sizeBytes": 6594
+      "sha256": "fa5e3869b33eeff94d91708cd6da306461f6e720b77ffe9690feff72072cd2d5",
+      "sizeBytes": 6567
     },
     {
       "path": "packages/win-server-WINRM-002/policy/deployIfNotExists.json",
-      "sha256": "fb5bdff8ac6ba1beca01a32baeee1ceada18bd16ccd04c87ba9c3ab99a8d69c8",
-      "sizeBytes": 4497
+      "sha256": "2ec0fb751b4cb4304ac35fb255ae82687e6d21fbe71db3337813ef36447c86ff",
+      "sizeBytes": 5941
+    },
+    {
+      "path": "packages/win-server-WINRM-002/policy/deployIfNotExists.portal.json",
+      "sha256": "89fe1f9fb3e37fc25f8464d1ebca0846c34bbe75681e06c9f50ae5fef9eb8d72",
+      "sizeBytes": 5589
     },
     {
       "path": "policies/enforce_required_uami_to_vms.json",
@@ -1610,13 +2118,14 @@
     },
     {
       "path": "scripts/hydrate-policy-templates.ps1",
-      "sha256": "58efc4591d807d846f413956c8c1165e73535d5c202f2856f52f8a80e4f43d64",
-      "sizeBytes": 3981
+      "sha256": "6e5e53f39f1ad48268e3d96d5ac407d33007fe3e2f55268d64f7ca9e93aac74b",
+      "sizeBytes": 4094
     },
     {
       "path": "scripts/test-all-packages.ps1",
       "sha256": "4abd70f89ed53e3046f792e33b852155cf3d859f51774a8cb117bd1c4ed825cc",
       "sizeBytes": 4116
     }
-  ]
+  ],
+  "variant": "classic-qualitychecked"
 }

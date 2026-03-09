@@ -51,3 +51,13 @@ Default output layout:
 - `./output/mof/` — compiled MOFs
 - `./output/zip/` — package ZIPs (upload these to storage)
 - `./output/policy/` — baseline + enhanced policy JSON artifacts
+
+
+## Policy JSON variants (Portal import)
+
+Each package contains policy JSON files under `packages/<ControlId>/policy/`:
+
+- `deployIfNotExists.portal.json` (non-enhanced, Portal import)
+- `deployIfNotExists.enhanced.portal.json` (enhanced with identity/UAMI gating, Portal import)
+
+The `*.sample.json` files include the full PolicyDefinition wrapper (`{ "properties": { ... } }`) and are intended for automation / hydration.

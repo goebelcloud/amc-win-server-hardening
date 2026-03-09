@@ -1,0 +1,184 @@
+{
+  "displayName": "tkmx-cm-windows-server-hardening-UAC-002 - User Account Control: Switch to the secure desktop when prompting for elevation (Machine Configuration)",
+  "policyType": "Custom",
+  "mode": "Indexed",
+  "description": "Applies Windows Server hardening setting: Local Policies\\Security Options -> User Account Control: Switch to the secure desktop when prompting for elevation = Enabled. (ControlId: win-server-UAC-002)",
+  "metadata": {
+    "category": "Guest Configuration",
+    "version": "1.0.0",
+    "guestConfiguration": {
+      "name": "win-server-UAC-002",
+      "version": "1.0.0",
+      "contentType": "Custom",
+      "contentUri": "__CONTENT_URI__",
+      "contentHash": "__CONTENT_HASH__",
+      "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
+      "configurationParameter": {}
+    },
+    "requiredProviders": [
+      "Microsoft.GuestConfiguration"
+    ]
+  },
+  "parameters": {
+    "requiredUserAssignedIdentityResourceId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Required UAMI resource ID",
+        "description": "UAMI that must be attached to the VM (used to download Machine Configuration packages)."
+      },
+      "defaultValue": "__UAMI_RESOURCE_ID__"
+    },
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable this policy."
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "assignmentType": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Machine Configuration assignment type",
+        "description": "How Machine Configuration should evaluate/apply the setting: Audit, ApplyAndMonitor, or ApplyAndAutoCorrect."
+      },
+      "allowedValues": [
+        "Audit",
+        "ApplyAndMonitor",
+        "ApplyAndAutoCorrect"
+      ],
+      "defaultValue": "ApplyAndAutoCorrect"
+    }
+  },
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Compute/virtualMachines"
+        },
+        {
+          "anyOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachines/osProfile.windowsConfiguration",
+              "exists": "true"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
+              "like": "Windows*"
+            }
+          ]
+        },
+        {
+          "field": "Microsoft.Compute/imageOffer",
+          "like": "WindowsServer*"
+        },
+        {
+          "anyOf": [
+            {
+              "field": "Microsoft.Compute/imageSku",
+              "like": "2016*"
+            },
+            {
+              "field": "Microsoft.Compute/imageSku",
+              "like": "2019*"
+            },
+            {
+              "field": "Microsoft.Compute/imageSku",
+              "like": "2022*"
+            },
+            {
+              "field": "Microsoft.Compute/imageSku",
+              "like": "2025*"
+            }
+          ]
+        },
+        {
+          "field": "identity.type",
+          "contains": "SystemAssigned"
+        },
+        {
+          "value": "[containsKey(field('identity.userAssignedIdentities'), parameters('requiredUserAssignedIdentityResourceId'))]",
+          "equals": "true"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/088ab73d-1256-47ae-bea9-9de8e7131f31"
+        ],
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "assignmentType": {
+                "value": "[parameters('assignmentType')]"
+              },
+              "assignmentName": {
+                "value": "[concat('win-server-UAC-002$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]"
+              }
+            },
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "assignmentType": {
+                  "type": "string"
+                },
+                "assignmentName": {
+                  "type": "string"
+                }
+              },
+              "resources": [
+                {
+                  "apiVersion": "2024-04-05",
+                  "type": "Microsoft.Compute/virtualMachines/providers/guestConfigurationAssignments",
+                  "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/', parameters('assignmentName'))]",
+                  "location": "[parameters('location')]",
+                  "properties": {
+                    "guestConfiguration": {
+                      "name": "win-server-UAC-002",
+                      "version": "1.0.0",
+                      "contentUri": "__CONTENT_URI__",
+                      "contentHash": "__CONTENT_HASH__",
+                      "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
+                      "assignmentType": "[parameters('assignmentType')]",
+                      "configurationParameter": [],
+                      "contentType": "Custom"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "name": "[concat('win-server-UAC-002$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]",
+        "existenceCondition": {
+          "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+          "equals": "Compliant"
+        },
+        "evaluationDelay": "AfterProvisioningSuccess"
+      }
+    }
+  }
+}
+

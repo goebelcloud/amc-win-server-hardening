@@ -8,14 +8,17 @@
       "category": "Guest Configuration",
       "version": "1.0.0",
       "guestConfiguration": {
-        "name": "win-server-SECO-017",
+        "name": "win-server-SECO-013",
         "version": "1.0.0",
         "contentType": "Custom",
         "contentUri": "__CONTENT_URI__",
         "contentHash": "__CONTENT_HASH__",
         "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
         "configurationParameter": {}
-      }
+      },
+      "requiredProviders": [
+        "Microsoft.GuestConfiguration"
+      ]
     },
     "parameters": {
       "requiredUserAssignedIdentityResourceId": {
@@ -72,50 +75,26 @@
             ]
           },
           {
+            "field": "Microsoft.Compute/imageOffer",
+            "like": "WindowsServer*"
+          },
+          {
             "anyOf": [
               {
-                "allOf": [
-                  {
-                    "field": "Microsoft.Compute/imageOffer",
-                    "like": "WindowsServer*"
-                  },
-                  {
-                    "anyOf": [
-                      {
-                        "field": "Microsoft.Compute/imageSKU",
-                        "like": "2016*"
-                      },
-                      {
-                        "field": "Microsoft.Compute/imageSKU",
-                        "like": "2019*"
-                      },
-                      {
-                        "field": "Microsoft.Compute/imageSKU",
-                        "like": "2022*"
-                      },
-                      {
-                        "field": "Microsoft.Compute/imageSKU",
-                        "like": "2025*"
-                      }
-                    ]
-                  }
-                ]
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2016*"
               },
               {
-                "field": "Microsoft.Compute/imageOffer",
-                "contains": "WS2016"
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2019*"
               },
               {
-                "field": "Microsoft.Compute/imageOffer",
-                "contains": "WS2019"
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2022*"
               },
               {
-                "field": "Microsoft.Compute/imageOffer",
-                "contains": "WS2022"
-              },
-              {
-                "field": "Microsoft.Compute/imageOffer",
-                "contains": "WS2025"
+                "field": "Microsoft.Compute/imageSku",
+                "like": "2025*"
               }
             ]
           },
@@ -124,8 +103,8 @@
             "contains": "SystemAssigned"
           },
           {
-            "field": "identity.userAssignedIdentities",
-            "containsKey": "[parameters('requiredUserAssignedIdentityResourceId')]"
+            "value": "[containsKey(field('identity.userAssignedIdentities'), parameters('requiredUserAssignedIdentityResourceId'))]",
+            "equals": "true"
           }
         ]
       },
@@ -134,7 +113,7 @@
         "details": {
           "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
           "roleDefinitionIds": [
-            "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            "/providers/Microsoft.Authorization/roleDefinitions/088ab73d-1256-47ae-bea9-9de8e7131f31"
           ],
           "deployment": {
             "properties": {
@@ -148,6 +127,9 @@
                 },
                 "assignmentType": {
                   "value": "[parameters('assignmentType')]"
+                },
+                "assignmentName": {
+                  "value": "[concat('win-server-SECO-013$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]"
                 }
               },
               "template": {
@@ -162,30 +144,40 @@
                   },
                   "assignmentType": {
                     "type": "string"
+                  },
+                  "assignmentName": {
+                    "type": "string"
                   }
                 },
                 "resources": [
                   {
-                    "apiVersion": "2021-01-25",
+                    "apiVersion": "2024-04-05",
                     "type": "Microsoft.Compute/virtualMachines/providers/guestConfigurationAssignments",
-                    "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/win-server-SECO-017')]",
+                    "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/', parameters('assignmentName'))]",
                     "location": "[parameters('location')]",
                     "properties": {
                       "guestConfiguration": {
-                        "name": "win-server-SECO-017",
+                        "name": "win-server-SECO-013",
                         "version": "1.0.0",
                         "contentUri": "__CONTENT_URI__",
                         "contentHash": "__CONTENT_HASH__",
                         "contentManagedIdentity": "__UAMI_RESOURCE_ID__",
                         "assignmentType": "[parameters('assignmentType')]",
-                        "configurationParameter": []
+                        "configurationParameter": [],
+                        "contentType": "Custom"
                       }
                     }
                   }
                 ]
               }
             }
-          }
+          },
+          "name": "[concat('win-server-SECO-013$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]",
+          "existenceCondition": {
+            "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+            "equals": "Compliant"
+          },
+          "evaluationDelay": "AfterProvisioningSuccess"
         }
       }
     }
