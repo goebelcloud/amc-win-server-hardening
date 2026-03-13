@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-006",
+  "baseControlId": "SECO-008",
+  "definitionName": "win-server-SECO-006",
+  "displayNameSuffix": "Network security: Do not store LAN Manager hash value on next password change (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Network security: Do not store LAN Manager hash value on next password change = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-006",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-006.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-006.zip",
+  "packageZipRelativePath": "output/zip/SECO-006/win-server-SECO-006.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

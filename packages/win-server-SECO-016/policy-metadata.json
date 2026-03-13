@@ -1,0 +1,23 @@
+{
+  "controlId": "SECO-016",
+  "baseControlId": "SECO-004",
+  "definitionName": "win-server-SECO-016",
+  "displayNameSuffix": "Accounts: Rename guest account (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Accounts: Rename guest account = Rename to non-default (even if disabled).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-016",
+  "packageParameters": {
+    "GuestNewName": {
+      "configurationParameterSelector": "[File]SECO_016_GuestNameParameter;Contents",
+      "defaultValue": "LocalGuest",
+      "description": "Target name for the built-in Guest account (RID 501)."
+    }
+  },
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-016.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-016.zip",
+  "packageZipRelativePath": "output/zip/SECO-016/win-server-SECO-016.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

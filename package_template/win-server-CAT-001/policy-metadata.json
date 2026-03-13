@@ -1,0 +1,17 @@
+{
+  "controlId": "CAT-001",
+  "baseControlId": "CAT-001",
+  "definitionName": "win-server-CAT-001",
+  "displayNameSuffix": "Sample package template (Machine Configuration)",
+  "descriptionText": "Template package. Replace this metadata with the real control description before use.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-CAT-001",
+  "packageParameters": {},
+  "contentUri": "",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-CAT-001.zip",
+  "packageZipRelativePath": "output/zip/CAT-001/win-server-CAT-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

@@ -1,0 +1,17 @@
+{
+  "controlId": "AUD-004",
+  "baseControlId": "AUD-004",
+  "definitionName": "win-server-AUD-004",
+  "displayNameSuffix": "Audit Policy Change (Success/Failure) (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Advanced Audit Policy Configuration -> Audit Policy Change (Success/Failure) = Enable Success and Failure.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-AUD-004",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-AUD-004.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-AUD-004.zip",
+  "packageZipRelativePath": "output/zip/AUD-004/win-server-AUD-004.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

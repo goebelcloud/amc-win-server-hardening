@@ -1,0 +1,17 @@
+{
+  "controlId": "LOG-001",
+  "baseControlId": "LOG-001",
+  "definitionName": "win-server-LOG-001",
+  "displayNameSuffix": "PowerShell Script Block Logging (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Components\\Windows PowerShell -> PowerShell Script Block Logging = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-LOG-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-LOG-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-LOG-001.zip",
+  "packageZipRelativePath": "output/zip/LOG-001/win-server-LOG-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

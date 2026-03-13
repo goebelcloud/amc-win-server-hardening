@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-007",
+  "baseControlId": "ACCT-007",
+  "definitionName": "win-server-ACCT-007",
+  "displayNameSuffix": "Account lockout threshold (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Account Lockout Policy -> Account lockout threshold = 10 invalid logon attempts (WS2025 baseline uses 3; test before lowering).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-007",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-007.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-007.zip",
+  "packageZipRelativePath": "output/zip/ACCT-007/win-server-ACCT-007.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

@@ -1,0 +1,17 @@
+{
+  "controlId": "DEF-001",
+  "baseControlId": "DEF-001",
+  "definitionName": "win-server-DEF-001",
+  "displayNameSuffix": "Real-time protection (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Components\\Microsoft Defender Antivirus -> Real-time protection = Enabled (do not disable real-time monitoring).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-DEF-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-DEF-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-DEF-001.zip",
+  "packageZipRelativePath": "output/zip/DEF-001/win-server-DEF-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-004",
+  "baseControlId": "ACCT-004",
+  "definitionName": "win-server-ACCT-004",
+  "displayNameSuffix": "Minimum password length (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Password Policy -> Minimum password length = 14 characters.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-004",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-004.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-004.zip",
+  "packageZipRelativePath": "output/zip/ACCT-004/win-server-ACCT-004.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

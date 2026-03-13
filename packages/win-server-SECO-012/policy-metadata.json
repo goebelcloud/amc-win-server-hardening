@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-012",
+  "baseControlId": "SECO-011",
+  "definitionName": "win-server-SECO-012",
+  "displayNameSuffix": "Network security: Minimum session security for NTLM SSP based (including secure RPC) servers (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Network security: Minimum session security for NTLM SSP based (including secure RPC) servers = Require NTLMv2 session security; Require 128-bit encryption.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-012",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-012.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-012.zip",
+  "packageZipRelativePath": "output/zip/SECO-012/win-server-SECO-012.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

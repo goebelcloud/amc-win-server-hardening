@@ -1,44 +1,29 @@
-SOURCES USED (public)
+Source provenance for this refactored package set:
 
-Machine Configuration authoring / policy
-- Set up a machine configuration authoring environment (module prerequisites incl. PSDesiredStateConfiguration 2.0.7 on Windows): https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/1-set-up-authoring-environment
-- PSDscResources (PowerShell Gallery): https://www.powershellgallery.com/packages/PSDscResources
-- PSDesiredStateConfiguration 2.0.7 (PowerShell Gallery): https://www.powershellgallery.com/packages/PSDesiredStateConfiguration/2.0.7
-- Create Machine Configuration package (New-GuestConfigurationPackage): https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
-- Create custom Machine Configuration policy definitions (New-GuestConfigurationPolicy parameters incl. ManagedIdentityResourceId & ExcludeArcMachines): https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-- Machine configuration assignment resources and assignmentType values (Audit, ApplyAndMonitor, ApplyAndAutoCorrect): https://learn.microsoft.com/en-us/azure/governance/machine-configuration/concepts/assignments
-- ARM schema reference for guestConfigurationAssignments (includes contentManagedIdentity): https://learn.microsoft.com/en-us/azure/templates/microsoft.guestconfiguration/guestconfigurationassignments
-- DeployIfNotExists effect requires a managed identity on the policy assignment: https://learn.microsoft.com/en-us/azure/governance/policy/concepts/effect-deploy-if-not-exists
+1. Uploaded archive used as the exclusive working basis:
+   - Azure_machine_configuration_hardening_packages_classic_qualitychecked.zip
 
-Prerequisites policies / extension
-- Built-in initiative “Deploy prerequisites to enable Guest Configuration policies on virtual machines” (raw JSON): https://raw.githubusercontent.com/Azure/azure-policy/master/built-in-policies/policySetDefinitions/Guest%20Configuration/Prerequisites.json
-- Built-in policy “Deploy the Windows Guest Configuration extension…” (raw JSON; includes alias checks for ConfigurationforWindows): https://raw.githubusercontent.com/Azure/azure-policy/master/built-in-policies/policyDefinitions/Guest%20Configuration/DeployExtensionWindows_Prerequisite.json
-- Machine Configuration extension (prereqs incl. system-assigned MI, extension naming): https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/guest-configuration
+2. In-package source materials carried forward and normalized:
+   - documentation/windows_server_os_hardening_suggestions_common_table_only.xlsx
+   - packages/win-server-*/Configuration.ps1
+   - packages/win-server-*/build.ps1
+   - packages/win-server-*/policy/*.json (used only as source material for the refactoring; not retained as per-package outputs)
+   - root documentation and helper scripts from the uploaded archive
 
-Managed identity enforcement (UAMI on VMs)
-- Tutorial with modify-policy JSON to add a user-assigned identity to VMs (raw markdown incl. policyRule JSON and DoNotEnforce guidance): https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/main/articles/governance/policy/tutorials/modify-virtual-machine-identity.md
-- Assign managed identities via Azure Policy (overview, permissions): https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-assign-managed-identity-via-azure-policy
+3. No portal policy variants are retained in the final package.
+4. Final policy generation is based on:
+   - policy-templates/deployIfNotExists.template.json
+   - policy-templates/deployIfNotExists.enhanced.template.json
+   - packages/win-server-*/policy-metadata.json
 
-Windows Server security baseline references (setting mappings)
-- Azure Policy guest configuration baseline for Windows Server 2022/2019/2016: https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows
-- Azure Policy guest configuration baseline for Windows Server 2025: https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows-server-2025
+5. This package iteration additionally includes:
+   - a cloud VM suitability review for Azure Windows VMs
+   - reordered package numbering with recommended controls first
+   - an audit-only package for the name `Administrator`
+   - standardized package READMEs as short validation checklists
 
-Selected setting-specific sources used for implementation notes
-- SMB signing (PowerShell + policy references): https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing
-- SMB signing overview incl. registry mapping: https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/overview-server-message-block-signing
-- “Minimum session security for NTLM SSP…” registry value example (0x20080000 / 537395200): https://learn.microsoft.com/en-us/answers/questions/1262547/inconsistent-application-of-network-security-minim
-- Configure added LSA protection (RunAsPPL): https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/configuring-additional-lsa-protection
-- RDP client “Do not allow passwords to be saved” registry mapping (TerminalServer.admx): https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-remotedesktopservices
-- Interactive logon machine inactivity limit requirement (Windows Server 2019 STIG viewer reference used for the 15-minute recommendation): https://www.stigviewer.com/stigs/microsoft_windows_server_2019/2025-05-23/finding/V-205633
-Local account rename (used by SECO-003/win-server-SECO-017)
-- Rename-LocalUser PowerShell cmdlet (LocalAccounts module): https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/rename-localuser?view=powershell-5.1
-- Guest configuration assignment schema (configurationParameter array, contentManagedIdentity): https://learn.microsoft.com/en-us/azure/templates/microsoft.guestconfiguration/guestconfigurationassignments
-- Machine Configuration custom policy parameters (overriding DSC resource properties at runtime): https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
+6. This package iteration intentionally removes:
+   - NET-002
+   - SECO-017
 
-SecurityPolicyDsc (DSC Community) used for AccountPolicy packages (win-server-ACCT-001..win-server-ACCT-009)
-- SecurityPolicyDsc module (PowerShell Gallery): https://www.powershellgallery.com/packages/SecurityPolicyDsc/2.10.0.0
-- AccountPolicy resource schema (shows property names like Enforce_password_history, Maximum_Password_Age, lockout settings): https://www.powershellgallery.com/packages/SecurityPolicyDsc/2.10.0.0/Content/DSCResources%5CMSFT_AccountPolicy%5CMSFT_AccountPolicy.schema.mof
-- Microsoft/Azure Policy sample MOF using SecurityPolicyDsc (ModuleVersion example): https://raw.githubusercontent.com/Azure/azure-policy/master/samples/GuestConfiguration/package-samples/configurations/EnforcePasswordHistory/EnforcePasswordHistory.mof
-
-Guest Configuration module isolation / PSDscResources guidance
-- Guest Configuration custom content (behavior changes and DSC module path isolation; guidance to prefer PSDscResources over inbox PSDesiredStateConfiguration resources): https://docs.azure.cn/en-us/governance/policy/concepts/guest-configuration-custom
+7. Optional controls occupy the highest numbers within the remaining categories.

@@ -1,0 +1,17 @@
+{
+  "controlId": "RDP-002",
+  "baseControlId": "RDP-002",
+  "definitionName": "win-server-RDP-002",
+  "displayNameSuffix": "Set client connection encryption level (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Computer Configuration\\Administrative Templates\\Windows Components\\Remote Desktop Services\\Remote Desktop Session Host\\Security -> Set client connection encryption level = High.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-RDP-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-RDP-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-RDP-002.zip",
+  "packageZipRelativePath": "output/zip/RDP-002/win-server-RDP-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

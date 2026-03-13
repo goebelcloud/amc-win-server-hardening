@@ -1,0 +1,17 @@
+{
+  "controlId": "FW-001",
+  "baseControlId": "FW-001",
+  "definitionName": "win-server-FW-001",
+  "displayNameSuffix": "Enable firewall for all profiles (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Defender Firewall with Advanced Security -> Enable firewall for all profiles = Enabled (Domain/Private/Public) + default inbound = Block.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-FW-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-FW-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-FW-001.zip",
+  "packageZipRelativePath": "output/zip/FW-001/win-server-FW-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

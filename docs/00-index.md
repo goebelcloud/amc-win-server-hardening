@@ -1,20 +1,31 @@
-# Step-by-step guides (index)
+# Documentation index
 
-This repository uses **one package per hardening setting** for Azure Machine Configuration (Guest Configuration).
+- `01-authoring-workstation-setup.md`  
+  Prerequisites for the Windows authoring workstation and the required PowerShell modules.
 
-Control IDs used for packages/ZIPs/content URIs are prefixed with `win-server-` (example: `win-server-ACCT-001`).
+- `02-build-a-package.md`  
+  Build one package or all packages with central output paths.
 
-`packages/machine-configuration.config.json` contains `ControlIdPolicyPrefix`, which is used **only** to prefix Azure Policy **displayName** values (human-readable). It is not used for ZIP names or content URIs.
+- `03-test-package-locally.md`  
+  Validate generated ZIP packages locally with the GuestConfiguration module.
 
-## Guides
+- `04-test-with-azure-machine-configuration.md`  
+  End-to-end Azure test flow: build, upload, hydration, policy import, assignment, and verification.
 
-1. [Build/prepare the authoring VM](01-authoring-workstation-setup.md)
-2. [Build a single package](02-build-a-package.md)
-3. [Test a package locally (no Azure)](03-test-package-locally.md)
-4. [Test with Azure Machine Configuration](04-test-with-azure-machine-configuration.md)
+- `05-terraform-policy-templates.md`  
+  Recommended IaC approach with central templates, package metadata, and `jsonencode()`.
 
-Additional docs:
-- [Deployment guide](deployment-guide.md)
-- [PoV runbook](pov-guide.md)
+- `06-quality-check-summary.md`  
+  Summary of the static quality checks for this package set.
 
-- [Terraform deployment of hydrated policies](05-terraform-policy-templates.md)
+- `07-monitoring-observability.md`  
+  Monitoring of Guest assignments, Azure Monitor alerting, Resource Graph, and Azure Managed Grafana.
+
+- `deployment-guide.md`  
+  Compact sequence for the regular rollout path.
+
+- `pov-guide.md`  
+  Recommended proof-of-value / pilot sequence with the default baseline, optional packages, and the intentionally removed controls.
+
+- `../package_template/`  
+  Template for creating new packages, including a working sample structure.

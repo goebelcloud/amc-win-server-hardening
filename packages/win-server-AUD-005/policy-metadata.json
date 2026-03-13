@@ -1,0 +1,17 @@
+{
+  "controlId": "AUD-005",
+  "baseControlId": "AUD-005",
+  "definitionName": "win-server-AUD-005",
+  "displayNameSuffix": "Audit Privilege Use (Failure) (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Advanced Audit Policy Configuration -> Audit Privilege Use (Failure) = Enable Failure (and Success if required).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-AUD-005",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-AUD-005.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-AUD-005.zip",
+  "packageZipRelativePath": "output/zip/AUD-005/win-server-AUD-005.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

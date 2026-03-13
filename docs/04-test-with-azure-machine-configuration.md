@@ -1,112 +1,58 @@
-# 04 — Test with Azure Machine Configuration
+# Test with Azure Machine Configuration
 
-This guide tests a package end-to-end using Azure Machine Configuration and Azure Policy.
+## Sequence
 
-It assumes:
-- You can upload package ZIPs to a storage location reachable by the VM.
-- A **User Assigned Managed Identity (UAMI)** is used for package access.
-- You will import policy JSON via the Azure Portal (or automation outside this repo).
-## Azure Portal JSON format: use *.portal.json
-
-Azure Portal has two common ways to create policy definitions:
-
-1. **Create definition (UI fields + JSON editor)**  
-   The Portal JSON editor expects the **PolicyDefinitionProperties object** (displayName/mode/metadata/parameters/policyRule), **not** a full wrapper with `{ "properties": { ... } }`.
-
-   Use the `*.portal.json` files created by the scripts in this repo.
-
-2. **Automation / REST**  
-   Many automation paths accept the full `{ "properties": { ... } }` wrapper.
-
-This repo therefore writes **two variants** when you build/hydrate policies:
-
-- `deployIfNotExists.enhanced.json` (full wrapper)
-- `deployIfNotExists.enhanced.portal.json` (properties-only, for Azure Portal JSON editor)
-
-If you also generate the baseline policy via `New-GuestConfigurationPolicy` during `build.ps1`, a corresponding `*.portal.json` file is written next to the generated JSON.
-
-
-> Note: The enhanced policy templates in this repo include an additional scope filter that targets **Windows Server** images using the Azure Policy aliases `Microsoft.Compute/imageOffer` and `Microsoft.Compute/imageSKU`.
-> This matches typical Azure Marketplace Windows Server images (Offer `WindowsServer*` with SKU `2016*`, `2019*`, `2022*`, `2025*`) and common Windows Server-based offers containing `WS2016`, `WS2019`, `WS2022`, or `WS2025`.
-> If you deploy VMs from **custom images** (Shared Image Gallery / imageReference.id) and the offer/SKU fields are not present, the policy may not evaluate those VMs. Adjust the policy condition if needed.
-
-
-## 1. Build the package ZIP
-
-Example:
-
+### 1. Build the package
 ```powershell
-cd .\packages\win-server-ACCT-001
-.\build.ps1
+pwsh ./packages/win-server-ACCT-001/build.ps1
 ```
 
-Ensure ZIP exists under `output\zip\...`.
+### 2. Upload the ZIP
+The generated file is stored by default under:
 
-## 2. Upload the ZIP to your storage
-
-Upload:
-`output\zip\win-server-ACCT-001\win-server-ACCT-001.zip`
-
-The final content URL must match:
-
-`<ContentUriBase>/win-server-ACCT-001.zip`
-
-## 3. Configure ContentUriBase + RequiredUamiResourceId
-
-Edit:
-
-`packages\machine-configuration.config.json`
-
-Set:
-- `ContentUriBase` to your storage container URL (no trailing slash required)
-- `RequiredUamiResourceId` to the UAMI resource ID
-
-`ControlIdPolicyPrefix` (optional) is used only for policy display names.
-
-## 4. Hydrate the enhanced policy JSON for the package
-
-From the package folder:
-
-```powershell
-cd .\packages\win-server-ACCT-001
-.\hydrate-policy.ps1
+```text
+output/zip/ACCT-001/win-server-ACCT-001.zip
 ```
 
-This writes:
-`output\policy\win-server-ACCT-001\deployIfNotExists.enhanced.json`
+This ZIP must be reachable under the URI formed from `ContentUriBase` plus the file name.
 
-It fills:
-- `__CONTENT_URI__`
-- `__CONTENT_HASH__`
-- `__UAMI_RESOURCE_ID__`
+### 3. Hydrate the policy files
+```powershell
+pwsh ./packages/win-server-ACCT-001/hydrate-policy.ps1
+```
 
-It also sets the policy **displayName** to:
-`<ControlIdPolicyPrefix><BaseControlId> (Machine Configuration)`
-Example:
-`tkmx-cm-windows-server-hardening-ACCT-001 (Machine Configuration)`
+Expected outputs:
 
-## 5. Import the policy JSON
+- `output/policy/ACCT-001/deployIfNotExists.json`
+- `output/policy/ACCT-001/deployIfNotExists.enhanced.json`
 
-In Azure Portal:
-- Policy → Definitions → Import definition
-- Upload: `deployIfNotExists.enhanced.json`
+### 4. Import policy
+Import exactly one of the hydrated definitions:
 
-## 6. Assign prerequisites + identity
+- standard / non-enhanced
+- enhanced
 
-You must ensure the VM meets prerequisites:
-- Machine Configuration extension installed
-- Required UAMI attached to the VM (for package download)
-- Policy assignment has remediation identity configured where required
+No portal-specific variants are intentionally provided.
 
-This repo includes shared policies under `policies\` to help model these steps.
+### 5. Create the assignment
+Azure Policy parameters:
 
-## 7. Trigger evaluation and remediation
+- `effect`
+- `assignmentType`
+- enhanced only: `requiredUserAssignedIdentityResourceId`
 
-After policy assignment:
-- Wait for policy evaluation cycle or trigger it via portal.
-- If DeployIfNotExists is used, start remediation.
+Do not pass these as Azure Policy parameters:
 
-## 8. Verify compliance
+- `contentUri`
+- `contentHash`
+- `contentManagedIdentity`
+- package-specific special values such as rename parameters
 
-- Azure Policy compliance view
-- Guest Configuration assignment compliance under the VM resource
+### 6. Verify on the VM
+Verification must always cover three levels:
+
+1. The Guest Configuration assignment really exists on the VM.
+2. Guest Configuration / agent logs show a successful evaluation or application.
+3. The actual Windows target setting is in the expected state when checked with built-in tools.
+
+The package-specific details are documented directly in the `README.md` file of each package folder.

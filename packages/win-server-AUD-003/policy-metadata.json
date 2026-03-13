@@ -1,0 +1,17 @@
+{
+  "controlId": "AUD-003",
+  "baseControlId": "AUD-003",
+  "definitionName": "win-server-AUD-003",
+  "displayNameSuffix": "Audit Account Management (Success/Failure) (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Advanced Audit Policy Configuration -> Audit Account Management (Success/Failure) = Enable Success and Failure.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-AUD-003",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-AUD-003.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-AUD-003.zip",
+  "packageZipRelativePath": "output/zip/AUD-003/win-server-AUD-003.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

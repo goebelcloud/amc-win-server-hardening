@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-008",
+  "baseControlId": "ACCT-008",
+  "definitionName": "win-server-ACCT-008",
+  "displayNameSuffix": "Account lockout duration (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Account Lockout Policy -> Account lockout duration = 15 minutes.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-008",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-008.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-008.zip",
+  "packageZipRelativePath": "output/zip/ACCT-008/win-server-ACCT-008.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

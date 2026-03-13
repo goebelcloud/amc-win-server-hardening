@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-006",
+  "baseControlId": "ACCT-006",
+  "definitionName": "win-server-ACCT-006",
+  "displayNameSuffix": "Store passwords using reversible encryption (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Password Policy -> Store passwords using reversible encryption = Disabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-006",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-006.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-006.zip",
+  "packageZipRelativePath": "output/zip/ACCT-006/win-server-ACCT-006.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

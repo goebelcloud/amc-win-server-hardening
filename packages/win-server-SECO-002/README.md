@@ -1,92 +1,73 @@
 # win-server-SECO-002 — Accounts: Guest account status
 
-**Version:** 1.0.0  
-**Purpose:** Enforce the following setting via Azure Machine Configuration (DSC):  
 - **Setting path:** `Local Policies\Security Options`
-- **Setting:** `Accounts: Guest account status`
 - **Suggested value:** `Disabled`
-- **Impact:** `Low`
+- **Default assignmentType:** `ApplyAndAutoCorrect`
 
-## What this package changes
+## Checklist
 
-## How to verify the setting is applied (built-in OS tools)
-
-### GUI verification
-1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
-2. Navigate to: **Local Policies > Security Options**.
-3. Open **Accounts: Guest account status** and confirm it is set to **Disabled**.
-
-### Command-line verification
-**Guest account (RID 501) check (PowerShell)**
+### 1. Build
 ```powershell
-Get-LocalUser | Where-Object { $_.SID.Value -match "-501$" } | Select-Object Name, SID, Enabled
-```
-Verify the guest account is disabled and/or renamed as required by the package.
-
-## Machine Configuration prerequisites (expected on target VMs)
-These packages assume the VM is prepared for Azure Machine Configuration:
-- **System-assigned managed identity enabled** (required for Machine Configuration service authentication).  
-- **Machine Configuration extension** installed: Publisher `Microsoft.GuestConfiguration`, Type `ConfigurationforWindows`, Name `AzurePolicyforWindows`.  
-- **Required user-assigned managed identity (UAMI)** attached to the VM to access the private Storage account hosting packages (used via `contentManagedIdentity`).
-
-You can enforce these prerequisites using the included policies under `../../policies/`.
-
-## DSC Configuration
-- Configuration name: `SECO_002_Accounts_Guest_account_status`
-- Source file: `Configuration.ps1`
-
-## Build this package (standalone)
-
-**Prereqs on your authoring/build machine**
-- PowerShell 7
-- Modules: `GuestConfiguration` (and its dependencies)  
-  See Microsoft authoring guidance.
-
-**Steps**
-1. Open PowerShell 7 as Administrator.
-2. From this package directory, run:
-   ```powershell
-   ./build.ps1 `
-     -PackageType AuditAndSet `
-     -PolicyMode ApplyAndAutoCorrect `
-     -ContentUri "https://<storage>.blob.core.windows.net/<container>/win-server-SECO-002.zip" `
-     -UserAssignedIdentityResourceId "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<uami>"
-   ```
-
-Outputs are written to the folders configured in `packages/machine-configuration.config.json` (OutputPaths). Default locations:
-- `./output/mof/` (compiled MOFs)
-- `./output/zip/` (package ZIPs)
-- `./output/policy/` (policy JSON artifacts)
-
-## Build in batch (repo root)
-
-From the repo root:
-```powershell
-./scripts/build-all.ps1 -PackageType AuditAndSet -PolicyMode ApplyAndAutoCorrect
+pwsh ./build.ps1
 ```
 
-The script skips packages that already have an output zip unless you add `-ForceRebuild`.
+Expected:
+- `output/mof/SECO-002/localhost.mof`
+- `output/zip/SECO-002/win-server-SECO-002.zip`
 
-## Policy files included
-- `policy/deployIfNotExists.json` — base policy template (mirrors `New-GuestConfigurationPolicy` structure; placeholders present).
-- `policy/deployIfNotExists.enhanced.sample.json` — sample showing how to add prerequisite + UAMI checks.
-
-## Sources (primary)
-- Azure Policy guest configuration baseline for Windows Server 2016/2019/2022 (setting mappings):  
-  https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows
-- Azure Policy guest configuration baseline for Windows Server 2025:  
-  https://learn.microsoft.com/en-us/azure/governance/policy/samples/guest-configuration-baseline-windows-server-2025
-- Machine Configuration package authoring (`New-GuestConfigurationPackage`):  
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
-- Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):  
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
-
-## Hydrate policy JSON for this package
-
-After you built the package zip (`./output/zip/<ControlID>/<ControlID>.zip` by default; see OutputPaths) and uploaded it to storage, run:
-
+### 2. Hydrate
+Upload the ZIP to Blob Storage. Then:
 ```powershell
-./hydrate-policy.ps1
+pwsh ./hydrate-policy.ps1
 ```
 
-This will create `deployIfNotExists.enhanced.json` in the configured policy output folder (default: `./output/policy/<ControlID>/deployIfNotExists.enhanced.json`) using values from the repository config file `packages/machine-configuration.config.json`.
+Expected:
+- `output/policy/SECO-002/deployIfNotExists.json`
+- `output/policy/SECO-002/deployIfNotExists.enhanced.json`
+
+### 3. Import policy
+- Import exactly one of the two hydrated definitions.
+- `deployIfNotExists.json` = standard / non-enhanced
+- `deployIfNotExists.enhanced.json` = enhanced
+- Do not use `*.portal.json`.
+
+### 4. Create assignment
+- `effect = DeployIfNotExists`
+- `assignmentType = ApplyAndAutoCorrect` (for pilot phases, use `Audit` or `ApplyAndMonitor` if needed)
+- Enhanced only: `requiredUserAssignedIdentityResourceId`
+
+### 5. Verify on the VM
+
+#### Guest Configuration Assignment
+Portal: check **VM > Guest configuration assignments**.
+
+```bash
+az resource list --resource-group <rg> --namespace Microsoft.Compute --resource-type "virtualMachines/providers/guestConfigurationAssignments" --query "[?contains(id, '/virtualMachines/<vmName>/')].[name, properties.guestConfiguration.name, properties.complianceStatus]" -o table
+```
+
+Expected:
+- An assignment for `win-server-SECO-002` exists.
+- `properties.guestConfiguration.name = win-server-SECO-002`
+- With `ApplyAndMonitor` / `ApplyAndAutoCorrect`, the VM becomes `Compliant` after successful evaluation.
+- With `Audit`, the VM is `NonCompliant` when the evaluated deviation is detected.
+
+#### Agent / Guest Configuration log
+```powershell
+$logs = Get-ChildItem -Path 'C:\ProgramData\GuestConfig' -Recurse -File -ErrorAction SilentlyContinue |
+  Sort-Object LastWriteTime -Descending
+$logs | Select-Object -First 20 FullName, LastWriteTime
+Get-Content -Path $logs[0].FullName -Tail 200
+```
+
+Expected:
+- recent entries for `win-server-SECO-002`
+- no recurring persistent errors
+
+#### Target setting
+GUI: open `compmgmt.msc` and navigate to `Computer Management > Local Users and Groups > Users`.
+
+```powershell
+Get-LocalUser | Where-Object { $_.SID.Value -match '-501$' } | Select-Object Name, Enabled, SID
+```
+
+Expected target value: RID 501 account exists and Enabled = False.

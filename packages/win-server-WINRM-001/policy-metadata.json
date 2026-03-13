@@ -1,0 +1,17 @@
+{
+  "controlId": "WINRM-001",
+  "baseControlId": "WINRM-001",
+  "definitionName": "win-server-WINRM-001",
+  "displayNameSuffix": "Allow unencrypted traffic (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Components\\Windows Remote Management (WinRM)\\WinRM Service -> Allow unencrypted traffic = Disabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-WINRM-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-WINRM-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-WINRM-001.zip",
+  "packageZipRelativePath": "output/zip/WINRM-001/win-server-WINRM-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

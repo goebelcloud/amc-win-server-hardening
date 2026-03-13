@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-003",
+  "baseControlId": "ACCT-003",
+  "definitionName": "win-server-ACCT-003",
+  "displayNameSuffix": "Minimum password age (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Password Policy -> Minimum password age = 1 day.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-003",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-003.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-003.zip",
+  "packageZipRelativePath": "output/zip/ACCT-003/win-server-ACCT-003.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

@@ -1,87 +1,30 @@
 <#
 File: Configuration.ps1
-Package: win-server-SECO-004 - Accounts: Rename guest account
-Purpose: Renames the built-in Guest account (RID 501) to a non-default name (parameterized via GuestNewName).
+Package: win-server-SECO-004 - Network access: Do not allow anonymous enumeration of SAM accounts and shares
+Purpose: Enforces 'Network access: Do not allow anonymous enumeration of SAM accounts and shares' by setting HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\RestrictAnonymous to 1.
 Version: 1.0.0
 #>
 
-# win-server-SECO-004: Accounts: Rename guest account
+# win-server-SECO-004: Network access: Do not allow anonymous enumeration of SAM accounts and shares
 # This DSC configuration targets the local security policy setting:
-#   Local Policies\Security Options -> Accounts: Rename guest account = Rename to non-default (even if disabled)
+#   Local Policies\Security Options -> Network access: Do not allow anonymous enumeration of SAM accounts and shares = Enabled
 # Expected impact: Low
 #
 # Implementation notes:
 #   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
 #   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
 
-Configuration SECO_004_Accounts_Rename_guest_account {
+Configuration SECO_004_Network_access_Do_not_allow_anonymous_enumeration_o {
     Import-DscResource -ModuleName PSDscResources
 
     Node "localhost" {
-
-        # Parameter file used for Machine Configuration parameter overrides.
-        # The File resource property "Contents" can be overridden via Azure Policy / Machine Configuration parameters.
-        File SECO_004_ParameterFolder {
-            DestinationPath = "C:\ProgramData\MachineConfiguration\win-server-SECO-004"
-            Type            = "Directory"
-            Ensure          = "Present"
+        Registry "win-server-SECO-004_1" {
+            Ensure    = "Present"
+            Key       = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa"
+            ValueName = "RestrictAnonymous"
+            ValueData = @("1")
+            ValueType = "DWord"
         }
 
-        File SECO_004_GuestNameParameter {
-            DestinationPath = "C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt"
-            Type            = "File"
-            Ensure          = "Present"
-            Contents        = "LocalGuest"  # Default; can be overridden using configuration parameters
-            DependsOn       = "[File]SECO_004_ParameterFolder"
-        }
-
-        Script SECO_004 {
-            DependsOn = "[File]SECO_004_GuestNameParameter"
-
-            GetScript  = {
-                $parameterFilePath = "C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt"
-                $desiredName = (Get-Content -Path $parameterFilePath -ErrorAction SilentlyContinue | Select-Object -First 1)
-                if ($null -ne $desiredName) { $desiredName = $desiredName.Trim() }
-                if ([string]::IsNullOrWhiteSpace($desiredName)) { $desiredName = "LocalGuest" }
-
-                $user = Get-LocalUser | Where-Object { $_.SID.Value -match "-501`$" } | Select-Object -First 1
-                $currentName = if ($user) { $user.Name } else { "" }
-
-                return @{
-                    Result = "CurrentName=$currentName;DesiredName=$desiredName"
-                }
-            }
-
-            TestScript = {
-                $parameterFilePath = "C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt"
-                $desiredName = (Get-Content -Path $parameterFilePath -ErrorAction SilentlyContinue | Select-Object -First 1)
-                if ($null -ne $desiredName) { $desiredName = $desiredName.Trim() }
-                if ([string]::IsNullOrWhiteSpace($desiredName)) { $desiredName = "LocalGuest" }
-
-                $user = Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID.Value -match "-501`$" } | Select-Object -First 1
-                if (-not $user) { return $false }
-
-                return ($user.Name -eq $desiredName)
-            }
-
-            SetScript  = {
-                $parameterFilePath = "C:\ProgramData\MachineConfiguration\win-server-SECO-004\GuestNewName.txt"
-                $desiredName = (Get-Content -Path $parameterFilePath -ErrorAction SilentlyContinue | Select-Object -First 1)
-                if ($null -ne $desiredName) { $desiredName = $desiredName.Trim() }
-                if ([string]::IsNullOrWhiteSpace($desiredName)) { $desiredName = "LocalGuest" }
-
-                $user = Get-LocalUser | Where-Object { $_.SID.Value -match "-501`$" } | Select-Object -First 1
-                if (-not $user) { throw "Unable to find built-in Guest account (RID 501)." }
-
-                if ($user.Name -ne $desiredName) {
-                    try {
-                        Rename-LocalUser -Name $user.Name -NewName $desiredName
-                    }
-                    catch {
-                        throw "Failed to rename built-in Guest account from '$($user.Name)' to '$desiredName'. Error: $($_.Exception.Message)"
-                    }
-                }
-            }
-        }
     }
 }

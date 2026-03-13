@@ -1,0 +1,17 @@
+{
+  "controlId": "LSA-001",
+  "baseControlId": "LSA-001",
+  "definitionName": "win-server-LSA-001",
+  "displayNameSuffix": "Enable LSA protection (RunAsPPL) (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: System\\Local Security Authority -> Enable LSA protection (RunAsPPL) = Enabled (Audit first if possible).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-LSA-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-LSA-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-LSA-001.zip",
+  "packageZipRelativePath": "output/zip/LSA-001/win-server-LSA-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

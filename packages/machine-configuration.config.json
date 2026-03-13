@@ -1,13 +1,12 @@
 {
   "ContentUriBase": "https://<storageaccount>.blob.core.windows.net/<container>",
   "RequiredUamiResourceId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<uami>",
-  "PolicyMode": "ApplyAndAutoCorrect",
-  "Notes": "Fill in ContentUriBase and RequiredUamiResourceId.\nOutputPaths controls where build/hydration scripts write artifacts. No build outputs are written inside the package folders.\nPaths are relative to the repository root unless you use absolute paths.\nControlIdPolicyPrefix: Prefix used ONLY for Azure Policy displayName (human-readable). It is NOT used for package folder names, ZIP names, contentUri, or any other identifiers.",
+  "PolicyDisplayPrefix": "",
   "OutputPaths": {
     "PackageZipOutputRoot": "output/zip",
     "PolicyOutputRoot": "output/policy",
     "MofOutputRoot": "output/mof",
     "PerPackageOutputMode": "byControlId"
   },
-  "ControlIdPolicyPrefix": "tkmx-cm-windows-server-hardening-"
+  "Notes": "PolicyDisplayPrefix is used only for Azure Policy displayName. It is not used for package folders, control IDs, ZIP file names, contentUri values or the Excel workbook."
 }

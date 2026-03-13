@@ -1,108 +1,77 @@
 <#
 .SYNOPSIS
-  Hydrate Azure Policy JSON for all packages (enhanced + non-enhanced).
+  Hydrate Azure Policy definitions for all packages.
 
 .DESCRIPTION
-  Iterates all package folders under .\packages\<ControlId>\ and invokes each package's hydrate-policy.ps1.
-  The per-package hydrate script renders both enhanced and non-enhanced DeployIfNotExists policy JSON variants
-
-  Note: ControlIdPolicyPrefix is used only for Azure Policy displayName. by replacing placeholders in:
-    policy/deployIfNotExists.enhanced.sample.json and policy/deployIfNotExists.json
-
-  The hydrated policy output is written to the configured policy output folder (never into the package folder).
-
-  Defaults are read from:
-    .\packages\machine-configuration.config.json
-
-.NOTES
-  File: hydrate-policy-templates.ps1
-  Version: 1.0.0
+  This script discovers every package folder that contains hydrate-policy.ps1,
+  runs the package-local hydration script, and then refreshes the runtime package catalog.
 #>
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
   [string]$PackagesRootPath,
 
-  # Optional overrides (defaults come from packages/machine-configuration.config.json)
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
   [string]$ContentUriBase,
 
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
   [string]$RequiredUamiResourceId
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-# Finds the nearest 'packages/machine-configuration.config.json' by walking up the directory tree.
-# This allows running the script from repo root or any subfolder.
+function Find-PackageHelperScript {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string]$StartDirectory
+  )
 
-function Find-RepositoryConfig {
-  param([string]$StartDirectory)
-
-  $current = Resolve-Path $StartDirectory
+  $currentDirectory = Resolve-Path -Path $StartDirectory
   while ($true) {
-    $candidate = Join-Path $current "machine-configuration.config.json"
-    if (Test-Path $candidate) { return $candidate }
+    $directCandidate = Join-Path -Path $currentDirectory -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $directCandidate) {
+      return $directCandidate
+    }
 
-    $parent = Split-Path $current -Parent
-    if ($parent -eq $current) { break }
-    $current = $parent
+    $packagesCandidate = Join-Path -Path (Join-Path -Path $currentDirectory -ChildPath 'packages') -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $packagesCandidate) {
+      return $packagesCandidate
+    }
+
+    $parentDirectory = Split-Path -Path $currentDirectory -Parent
+    if ($parentDirectory -eq $currentDirectory) { break }
+    $currentDirectory = $parentDirectory
   }
 
-  throw "Could not find packages/machine-configuration.config.json by searching up from: $StartDirectory"
+  throw 'Could not find packages/package-metadata.helpers.ps1.'
 }
 
 $scriptRoot = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
-$repoRoot   = Split-Path -Path $scriptRoot -Parent
+$repositoryRoot = Split-Path -Path $scriptRoot -Parent
 
 if (-not $PackagesRootPath) {
-  $PackagesRootPath = Join-Path $repoRoot "packages"
+  $PackagesRootPath = Join-Path -Path $repositoryRoot -ChildPath 'packages'
 }
 
+$helperPath = Find-PackageHelperScript -StartDirectory $PackagesRootPath
+. $helperPath
 $configPath = Find-RepositoryConfig -StartDirectory $PackagesRootPath
-$config     = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-if (-not $ContentUriBase) { $ContentUriBase = $config.ContentUriBase }
-if (-not $RequiredUamiResourceId) { $RequiredUamiResourceId = $config.RequiredUamiResourceId }
 
-if (-not $ContentUriBase -or $ContentUriBase -like "*<storageaccount>*") {
-  throw "ContentUriBase is not set. Update packages/machine-configuration.config.json (ContentUriBase) or pass -ContentUriBase."
-}
-if (-not $RequiredUamiResourceId -or $RequiredUamiResourceId -like "*/subscriptions/<sub>*") {
-  throw "RequiredUamiResourceId is not set. Update packages/machine-configuration.config.json (RequiredUamiResourceId) or pass -RequiredUamiResourceId."
-}
+# Discover all package folders that contain a hydrate script.
+$packageDirectories = Get-ChildItem -Path $PackagesRootPath -Directory |
+  Where-Object { Test-Path -Path (Join-Path -Path $_.FullName -ChildPath 'hydrate-policy.ps1') } |
+  Sort-Object -Property Name
 
-$packagesRootFullPath = (Resolve-Path $PackagesRootPath).Path
-Write-Host ("Hydrating policies for packages under: {0}" -f $packagesRootFullPath) -ForegroundColor Cyan
-
-# Package discovery:
-# We treat any directory that contains a hydrate-policy.ps1 as a package folder.
-# The package folder name is the ControlId (for example: win-server-ACCT-001).
-
-$packageFolders = Get-ChildItem -Path $packagesRootFullPath -Directory |
-  Where-Object { Test-Path (Join-Path $_.FullName "hydrate-policy.ps1") } |
-  Sort-Object Name
-
-# Hydration loop:
-# For each package we call its hydrate-policy.ps1, which:
-#   - reads policy/deployIfNotExists.enhanced.sample.json and policy/deployIfNotExists.json
-#   - injects contentUri/contentHash/UAMI into metadata.guestConfiguration
-#   - writes deployIfNotExists.enhanced.json to the configured PolicyOutputRoot
-
-foreach ($pkg in $packageFolders) {
-  $hydrateScript = Join-Path $pkg.FullName "hydrate-policy.ps1"
-  if (-not (Test-Path $hydrateScript)) {
-    Write-Warning ("Skipping {0}: hydrate-policy.ps1 not found." -f $pkg.Name)
-    continue
-  }
-
-  try {
-    & $hydrateScript -ConfigPath $configPath -ContentUriBase $ContentUriBase -RequiredUamiResourceId $RequiredUamiResourceId
-  }
-  catch {
-    Write-Warning ("Failed to hydrate {0}: {1}" -f $pkg.Name, $_.Exception.Message)
-  }
+# Hydrate each package using the same runtime inputs.
+foreach ($packageDirectory in $packageDirectories) {
+  $hydrateScriptPath = Join-Path -Path $packageDirectory.FullName -ChildPath 'hydrate-policy.ps1'
+  Write-Host -Object ('HYDRATE {0}' -f $packageDirectory.Name) -ForegroundColor Cyan
+  & $hydrateScriptPath -ContentUriBase $ContentUriBase -RequiredUamiResourceId $RequiredUamiResourceId
 }
 
-Write-Host "Done." -ForegroundColor Green
+# Refresh the runtime catalog once more at the end of the batch run.
+$catalogPath = Update-PackageCatalog -ConfigPath $configPath
+Write-Host -Object ('Updated runtime package catalog: {0}' -f $catalogPath) -ForegroundColor Green

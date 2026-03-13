@@ -20,15 +20,15 @@ Configuration FW_001_Enable_firewall_for_all_profiles {
     Node "localhost" {
         Script FW_001 {
             GetScript  = {
-                return @{ Result = (Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json -Compress) }
+                return @{ Result = (Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction | ConvertTo-Json -Compress) }
             }
             TestScript = {
                 $profiles = Get-NetFirewallProfile -ErrorAction SilentlyContinue
                 if (-not $profiles) { return $false }
-                return (($profiles | Where-Object { $_.Enabled -ne $true }).Count -eq 0)
+                return ((($profiles | Where-Object { $_.Enabled -ne $true }).Count -eq 0) -and (($profiles | Where-Object { $_.DefaultInboundAction -ne 'Block' }).Count -eq 0))
             }
             SetScript  = {
-                Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled $true | Out-Null
+                Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled $true -DefaultInboundAction Block | Out-Null
             }
         }
     }

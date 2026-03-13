@@ -1,63 +1,128 @@
-# Azure Machine Configuration — Windows OS hardening (one setting per package)
+# Azure Machine Configuration Hardening Packages — Refactored Cloud VM Review
 
-This bundle contains:
-- `packages/` — **50** packages (1 per hardening setting). Each package contains:
-  - `Configuration.ps1` (DSC)
-  - `build.ps1` (standalone build: MOF + zip + policy JSON via `New-GuestConfigurationPolicy`)
-  - `README.md` (how to evaluate/remediate with built-in Windows tools)
-  - `policy/` (policy templates + enhanced sample)
-- `policies/` — shared policies:
-  - `enforce_required_uami_to_vms.json` (modify policy to attach a UAMI)
-  - `machine_configuration_prereqs_and_uami_initiative.json` (initiative: system MI + extension + required UAMI)
-- `scripts/` — helper scripts:
-  - `build-all.ps1` (batch build, skips existing outputs)
-  - `hydrate-policy-templates.ps1` (fills placeholders in the template JSONs)
-- `docs/00-index.md` — index of all step-by-step guides
-- `docs/01-authoring-workstation-setup.md` — build/prepare the authoring VM
-- `docs/02-build-a-package.md` — build a single package
-- `docs/03-test-package-locally.md` — test a package locally (no Azure)
-- `docs/04-test-with-azure-machine-configuration.md` — test with Azure Machine Configuration
-- `docs/deployment-guide.md` — step-by-step deployment walkthrough
-- `docs/pov-guide.md` — **PoV runbook** (Azure-only, end-to-end demo)
-- `SOURCES.txt` — public sources referenced for this bundle
+This repository contains 48 Windows Server hardening packages for Azure Machine Configuration in the refactored target structure.
 
-## Notes
-- Scope: Azure Windows VMs only (not Arc).
-- Control IDs used for packages/ZIPs/URIs are prefixed with `win-server-` (example: `win-server-ACCT-001`).
-- `packages/machine-configuration.config.json` contains `ControlIdPolicyPrefix` which is used **only** to prefix Azure Policy **displayName** values (human-readable). It is not used for ZIP names or content URIs.
-- Each package starts at version `1.0.0` by design.
+## Key characteristics
 
-## Authoring modules
+- Package folders use only the form `win-server-<Control-ID>`.
+- Package folders do not contain generated policy files or local output artifacts.
+- Azure Policy is generated only from the two central templates under `policy-templates/` plus one `policy-metadata.json` file per package.
+- Each `policy-metadata.json` also stores the last synchronized artifact state (`contentUri`, `contentHash`, ZIP path, and synchronization timestamp).
+- `packages/package-catalog.json` is a runtime-generated central JSON file that contains only the packages currently present in the directory.
+- Only two policy variants exist:
+  - `deployIfNotExists.json`
+  - `deployIfNotExists.enhanced.json`
+- `*.portal.json`, tag-scope variants, and publisher/tag special variants are removed.
+- VM scoping uses only:
+  - `Microsoft.Compute/imagePublisher`
+  - `Microsoft.Compute/imageOffer`
+  - `Microsoft.Compute/imageSku`
+- Package numbering is ordered so that recommended controls appear first. Optional controls appear at the end of their category.
+- `SECO-015` is an audit package that flags VMs where a local account uses the name `Administrator`.
 
-Packages in this repository are authored with:
-- `PSDscResources` for registry/file/script primitives (recommended for Guest Configuration scenarios).
-- `SecurityPolicyDsc` for local account policy settings (password and lockout).
+## Package layout
 
-Install prerequisites on the authoring machine with:
-```powershell
-.\authoring-workstation\install-required-modules.ps1 -Scope CurrentUser
+```text
+packages/
+  machine-configuration.config.json
+  package-catalog.json
+  package-metadata.helpers.ps1
+  win-server-ACCT-001/
+    Configuration.ps1
+    build.ps1
+    hydrate-policy.ps1
+    policy-metadata.json
+    README.md
+  ...
+policy-templates/
+  deployIfNotExists.template.json
+  deployIfNotExists.enhanced.template.json
+package_template/
+  README.md
+  win-server-CAT-001/
+scripts/
+  build-all.ps1
+  hydrate-policy-templates.ps1
+  test-all-packages.ps1
+documentation/
+  windows_server_os_hardening_suggestions_common_table_only.xlsx
+docs/
+  00-index.md
+  01-authoring-workstation-setup.md
+  02-build-a-package.md
+  03-test-package-locally.md
+  04-test-with-azure-machine-configuration.md
+  05-terraform-policy-templates.md
+  06-quality-check-summary.md
+  07-monitoring-observability.md
+  deployment-guide.md
+  pov-guide.md
 ```
 
+## Azure cloud VM grouping
 
+### Recommended default baseline
+- `ACCT-001` to `ACCT-009`
+- `AUD-001` to `AUD-006`
+- `DEF-001` to `DEF-003`
+- `FW-001`, `FW-002`
+- `LOG-001`, `LOG-002`
+- `NET-001`
+- `RDP-001`, `RDP-002`
+- `SECO-001` to `SECO-009`
+- `UAC-001`, `UAC-002`, `UAC-003`
+- `WINRM-001`, `WINRM-002`
 
+### Optional / targeted testing
+- `LSA-001`
+- `RDP-003`
+- `SECO-010` to `SECO-016`
 
+### No longer included in the package set
+- `NET-002`
+- `SECO-017`
 
-## Outputs
+## Central configuration
 
-Build and hydration scripts **never write artifacts inside the package folders**.
-All outputs go to the folders configured in `packages/machine-configuration.config.json` under `OutputPaths`.
+`packages/machine-configuration.config.json` controls:
 
-Default output layout:
-- `./output/mof/` — compiled MOFs
-- `./output/zip/` — package ZIPs (upload these to storage)
-- `./output/policy/` — baseline + enhanced policy JSON artifacts
+- `ContentUriBase`
+- `RequiredUamiResourceId`
+- `PolicyDisplayPrefix`
+- the central output paths under `OutputPaths`
 
+`PolicyDisplayPrefix` is used only for the Azure Policy `displayName`. It does not affect:
 
-## Policy JSON variants (Portal import)
+- package folder names
+- control IDs
+- ZIP file names
+- `contentUri`
+- Excel control IDs
 
-Each package contains policy JSON files under `packages/<ControlId>/policy/`:
+## Quick start
 
-- `deployIfNotExists.portal.json` (non-enhanced, Portal import)
-- `deployIfNotExists.enhanced.portal.json` (enhanced with identity/UAMI gating, Portal import)
+1. Install modules on a Windows authoring VM:
+   ```powershell
+   pwsh ./authoring-workstation/install-required-modules.ps1
+   ```
+2. Build a package:
+   ```powershell
+   pwsh ./packages/win-server-ACCT-001/build.ps1
+   ```
+3. Upload the ZIP to Blob Storage.
+4. Hydrate the policy files:
+   ```powershell
+   pwsh ./packages/win-server-ACCT-001/hydrate-policy.ps1
+   ```
+5. Import exactly one hydrated policy and create an assignment.
+6. Always validate on three levels:
+   - the Guest Configuration assignment on the VM
+   - the agent / Guest Configuration log
+   - the actual Windows target setting
 
-The `*.sample.json` files include the full PolicyDefinition wrapper (`{ "properties": { ... } }`) and are intended for automation / hydration.
+## Additional documentation
+
+- `docs/00-index.md`
+- `docs/05-terraform-policy-templates.md`
+- `docs/07-monitoring-observability.md`
+- `docs/06-quality-check-summary.md`

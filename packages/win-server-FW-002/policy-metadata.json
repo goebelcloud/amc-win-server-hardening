@@ -1,0 +1,17 @@
+{
+  "controlId": "FW-002",
+  "baseControlId": "FW-002",
+  "definitionName": "win-server-FW-002",
+  "displayNameSuffix": "Enable firewall logging (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Defender Firewall with Advanced Security -> Enable firewall logging = Log dropped packets = Yes; Log successful connections = (Optional); Log size >= 16,384 KB.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-FW-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-FW-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-FW-002.zip",
+  "packageZipRelativePath": "output/zip/FW-002/win-server-FW-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

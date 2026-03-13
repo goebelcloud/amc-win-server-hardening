@@ -1,62 +1,49 @@
-# 01 — Build/prepare the authoring VM
+# Set up the authoring workstation
 
-This guide prepares a Windows authoring machine to build and validate Machine Configuration packages from this repository.
+## Goal
+Packages are built and validated on a Windows authoring VM. The repository structure itself is platform-neutral, but the actual package build is not.
 
-## 1. Recommended VM baseline
+## Prerequisites
+- PowerShell 7
+- Internet access to PSGallery or an internal mirror repository
+- Permission to install PowerShell modules
+- Write access to this repository
+- Access to the target storage account for package ZIP files
 
-- Windows Server 2022 or Windows 11 (works with PowerShell 7)
-- Internet access to the PowerShell Gallery (or a mirrored internal gallery)
-- Git installed (or download repo ZIP)
-
-## 2. Get the repository
-
+## Install modules
 ```powershell
-git clone <your-repo-url>
-cd <repo-folder>
+pwsh ./authoring-workstation/install-required-modules.ps1
 ```
 
-## 3. Install PowerShell 7 (recommended)
+The script installs or validates these modules in particular:
 
-If `pwsh` is not available, install PowerShell 7 on the authoring machine.
+- `GuestConfiguration`
+- `PSDesiredStateConfiguration`
+- `PSDscResources`
+- `SecurityPolicyDsc`
 
-Verify:
+It also validates the import and availability of these DSC resources:
 
-```powershell
-pwsh -NoLogo -Command "$PSVersionTable.PSVersion"
-```
+- `File`, `Registry`, and `Script`
+- `AccountPolicy`, `AuditPolicySubcategory`, and `SecurityOption`
 
-## 4. Install required authoring modules
-
-This repo includes an installer script:
-
-```powershell
-cd .\authoring-workstation
-.\install-required-modules.ps1 -Scope CurrentUser
-```
-
-What this does:
-- Installs required PowerShell modules to build/validate packages (DSC resources, GuestConfiguration tooling).
-- These modules are required on the **authoring** machine. Packages themselves embed required resources during build.
-
-## 5. Validate module availability
-
-```powershell
-Get-Module -ListAvailable PSDscResources, SecurityPolicyDsc, GuestConfiguration |
-  Select-Object Name, Version | Format-Table -AutoSize
-```
-
-If `GuestConfiguration` is missing, the local package validation step will not work.
-
-## 6. Configure repo settings
-
-Open:
-
-`packages\machine-configuration.config.json`
+## Repository configuration
+`packages/machine-configuration.config.json` is the central configuration file.
 
 Important fields:
-- `ContentUriBase`: your storage URL base (used when hydrating policy JSON)
-- `RequiredUamiResourceId`: UAMI resource ID the VM must have
-- `OutputPaths`: where build artifacts are written
-- `ControlIdPolicyPrefix`: used **only** for Azure Policy `displayName`
 
-You can build packages without Azure values, but hydration needs valid `ContentUriBase` and `RequiredUamiResourceId`.
+- `ContentUriBase`  
+  Base URI for uploaded package ZIP files.
+- `RequiredUamiResourceId`  
+  Default UAMI for the enhanced policy.
+- `PolicyDisplayPrefix`  
+  Optional prefix for the Azure Policy `displayName`.
+- `OutputPaths.PackageZipOutputRoot`
+- `OutputPaths.MofOutputRoot`
+- `OutputPaths.PolicyOutputRoot`
+
+## Important architecture rules
+- Package folders use only `win-server-<Control-ID>`.
+- Package folders do not store generated outputs.
+- Policy files are generated only from the central templates plus `policy-metadata.json`.
+- No `*.portal.json` files exist.

@@ -1,274 +1,189 @@
 <#
 .SYNOPSIS
-  Build this Machine Configuration package (win-server-ACCT-009).
+  Build this Machine Configuration package.
 
 .DESCRIPTION
-  - Compiles the DSC configuration to a MOF (localhost.mof)
-  - Creates the Machine Configuration package ZIP
-  - Optionally generates the baseline Azure Policy JSON via New-GuestConfigurationPolicy
-    (only if ContentUriBase and RequiredUamiResourceId are configured)
+  This script compiles Configuration.ps1 to a MOF file and then creates the
+  Guest Configuration ZIP in the central output folder configured in
+  packages/machine-configuration.config.json.
 
-  IMPORTANT:
-  - No build outputs are written inside the package folder.
-  - All outputs are written to the folders configured in: packages/machine-configuration.config.json (OutputPaths)
-
-.NOTES
-  File: build.ps1
-  Package: win-server-ACCT-009 - Reset account lockout counter after
-  Purpose: Builds the Machine Configuration artifacts for the setting "Reset account lockout counter after" (win-server-ACCT-009).
-  Version: 1.0.0
+  After the build, the script synchronizes:
+    - the package-local policy-metadata.json
+    - the runtime package catalog under packages/package-catalog.json
 #>
 
 [CmdletBinding()]
 param(
-  # Machine Configuration package type ("Audit" or "AuditAndSet")
-  [Parameter(Mandatory=$false)]
-  [ValidateSet("Audit","AuditAndSet")]
-  [string]$PackageType = "AuditAndSet",
+  [Parameter()]
+  [ValidateSet('Audit', 'AuditAndSet')]
+  [string]$PackageType,
 
-  # Policy mode used for the baseline policy JSON (New-GuestConfigurationPolicy)
-  [Parameter(Mandatory=$false)]
-  [ValidateSet("Audit","ApplyAndMonitor","ApplyAndAutoCorrect")]
-  [string]$PolicyMode,
-
-  # Optional overrides (defaults come from packages/machine-configuration.config.json)
-  [Parameter(Mandatory=$false)]
-  [string]$ContentUriBase,
-
-  [Parameter(Mandatory=$false)]
-  [string]$UserAssignedIdentityResourceId,
-
-  # Rebuild even if a ZIP already exists in the output folder
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
   [switch]$ForceRebuild
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-function Find-RepositoryConfig {
-  param([string]$StartDirectory)
+function Find-PackageHelperScript {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string]$StartDirectory
+  )
 
-  $current = Resolve-Path $StartDirectory
+  $currentDirectory = Resolve-Path -Path $StartDirectory
   while ($true) {
-    $candidate = Join-Path $current "machine-configuration.config.json"
-    if (Test-Path $candidate) { return $candidate }
+    $directCandidate = Join-Path -Path $currentDirectory -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $directCandidate) {
+      return $directCandidate
+    }
 
-    $parent = Split-Path $current -Parent
-    if ($parent -eq $current) { break }
-    $current = $parent
+    $packagesCandidate = Join-Path -Path (Join-Path -Path $currentDirectory -ChildPath 'packages') -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $packagesCandidate) {
+      return $packagesCandidate
+    }
+
+    $parentDirectory = Split-Path -Path $currentDirectory -Parent
+    if ($parentDirectory -eq $currentDirectory) { break }
+    $currentDirectory = $parentDirectory
   }
 
-  throw "Could not find packages/machine-configuration.config.json by searching up from: $StartDirectory"
+  throw 'Could not find packages/package-metadata.helpers.ps1.'
 }
 
-# Package context
-$packageRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$packageFolderName = Split-Path -Leaf $packageRoot
-$controlId = ($packageFolderName -split "__")[0]
-$baseControlIdMatch = [regex]::Match($controlId, "([A-Z]{2,6}-\d{3})$")
-$baseControlId = if ($baseControlIdMatch.Success) { $baseControlIdMatch.Groups[1].Value } else { $controlId }
-$packageName = $controlId
-$packageVersion = "1.0.0"
+function Get-ConfigurationNameFromFile {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string]$Path
+  )
 
-# Setting metadata (used for readable policy displayName/description)
-$settingTitle = "Reset account lockout counter after"
-$settingPath  = "Account Policies\Account Lockout Policy"
-$settingSuggestedValue = "15 minutes"
+  $fileContent = Get-Content -Path $Path -Raw
+  $configurationMatch = [regex]::Match($fileContent, '(?m)^\s*Configuration\s+([A-Za-z_][A-Za-z0-9_]*)')
+  if (-not $configurationMatch.Success) {
+    throw ('Unable to discover DSC configuration name in {0}' -f $Path)
+  }
 
+  return $configurationMatch.Groups[1].Value
+}
 
+# Resolve the package root and import the shared metadata helpers.
+$packageRoot = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
+$helperPath = Find-PackageHelperScript -StartDirectory $packageRoot
+. $helperPath
 
-# Detailed build steps for win-server-ACCT-009 (Reset account lockout counter after):
-#   1) Read repository configuration (packages/machine-configuration.config.json) to resolve output folders and defaults.
-#      - PolicyMode controls the default remediation behavior in the generated *baseline* policy (if generated).
-#      - ContentUriBase and RequiredUamiResourceId are used only when generating baseline policy JSON.
-#   2) Compile the DSC configuration 'ACCT_009_Reset_account_lockout_counter_after' to produce a node MOF for localhost.
-#      - Most common output: <MofOutputPath>\localhost.mof
-#   3) Create the Machine Configuration package ZIP 'win-server-ACCT-009.zip' using New-GuestConfigurationPackage.
-#      - The ZIP includes the compiled MOF plus any DSC resource modules referenced by Configuration.ps1.
-#      - Those modules must be installed on the authoring VM; they are shipped in the ZIP so the target VM does not need preinstalled DSC modules.
-#   4) If ContentUriBase and RequiredUamiResourceId are configured (not placeholders), generate baseline Azure Policy JSON via New-GuestConfigurationPolicy
-#      with a readable display name/description for humans:
-#        - Account Policies\Account Lockout Policy -> Reset account lockout counter after = 15 minutes
-# Load repository config
+# Read package-local metadata first so default behavior can follow the package definition.
+$packageName = Split-Path -Path $packageRoot -Leaf
+$metadataPath = Join-Path -Path $packageRoot -ChildPath 'policy-metadata.json'
+if (-not (Test-Path -Path $metadataPath)) {
+  throw ('policy-metadata.json not found: {0}' -f $metadataPath)
+}
+
+$metadata = Read-JsonFileOrdered -Path $metadataPath
+$controlId = [string]$metadata.controlId
+
+if (-not $PackageType) {
+  if ([string]$metadata.assignmentTypeDefault -eq 'Audit') {
+    $PackageType = 'Audit'
+  }
+  else {
+    $PackageType = 'AuditAndSet'
+  }
+}
+
+# Resolve central output locations from the repository configuration.
 $configPath = Find-RepositoryConfig -StartDirectory $packageRoot
-$config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-
-
-# Policy display identifier: optional prefix + BaseControlId (human-readable only).
-$policyDisplayPrefix = $config.ControlIdPolicyPrefix
-$policyDisplayId = if ($policyDisplayPrefix) { $policyDisplayPrefix + $baseControlId } else { $packageName }
+$config = Read-JsonFileOrdered -Path $configPath
 if (-not $config.OutputPaths) {
-  throw "OutputPaths missing in packages/machine-configuration.config.json."
+  throw 'OutputPaths missing in packages/machine-configuration.config.json.'
 }
 
-# Derive repo root from config location: <repoRoot>\packages\machine-configuration.config.json
-$repoRoot = Split-Path -Path (Split-Path -Path $configPath -Parent) -Parent
+$repositoryRoot = Split-Path -Path (Split-Path -Path $configPath -Parent) -Parent
+$zipRoot = Join-Path -Path $repositoryRoot -ChildPath $config.OutputPaths.PackageZipOutputRoot
+$mofRoot = Join-Path -Path $repositoryRoot -ChildPath $config.OutputPaths.MofOutputRoot
 
-# Apply defaults from config if parameters are not provided
-if (-not $PolicyMode) {
-  if ($config.PolicyMode) {
-    $PolicyMode = $config.PolicyMode
-  } else {
-    $PolicyMode = "ApplyAndAutoCorrect"
-  }
+$perPackageOutputMode = [string]$config.OutputPaths.PerPackageOutputMode
+if (-not $perPackageOutputMode) {
+  $perPackageOutputMode = 'byControlId'
 }
 
-if (-not $ContentUriBase) {
-  $ContentUriBase = $config.ContentUriBase
-}
+$outputFolderName = if ($perPackageOutputMode -eq 'byPackageFolder') { $packageName } else { $controlId }
+$zipOutputPath = Join-Path -Path $zipRoot -ChildPath $outputFolderName
+$mofOutputPath = Join-Path -Path $mofRoot -ChildPath $outputFolderName
 
-if (-not $UserAssignedIdentityResourceId) {
-  $UserAssignedIdentityResourceId = $config.RequiredUamiResourceId
-}
+New-Item -ItemType Directory -Path $zipOutputPath -Force | Out-Null
+New-Item -ItemType Directory -Path $mofOutputPath -Force | Out-Null
 
-# Resolve output paths (never inside the package folder)
-$packageZipOutputRoot = Join-Path $repoRoot $config.OutputPaths.PackageZipOutputRoot
-$policyOutputRoot     = Join-Path $repoRoot $config.OutputPaths.PolicyOutputRoot
-$mofOutputRoot        = Join-Path $repoRoot $config.OutputPaths.MofOutputRoot
+$expectedZipPath = Join-Path -Path $zipOutputPath -ChildPath ('{0}.zip' -f $packageName)
 
-$perPackageMode = $config.OutputPaths.PerPackageOutputMode
-if (-not $perPackageMode) { $perPackageMode = "byControlId" }
-
-switch ($perPackageMode) {
-  "byPackageFolder" { $outFolder = $packageFolderName }
-  default           { $outFolder = $controlId }
-}
-
-$packageZipOutputPath = Join-Path $packageZipOutputRoot $outFolder
-$policyOutputPath     = Join-Path $policyOutputRoot     $outFolder
-$mofOutputPath         = Join-Path $mofOutputRoot        $outFolder
-
-New-Item -Path $packageZipOutputPath -ItemType Directory -Force | Out-Null
-New-Item -Path $policyOutputPath     -ItemType Directory -Force | Out-Null
-New-Item -Path $mofOutputPath        -ItemType Directory -Force | Out-Null
-
-$expectedZipPath = Join-Path $packageZipOutputPath ("{0}.zip" -f $packageName)
-if ((Test-Path $expectedZipPath) -and (-not $ForceRebuild)) {
-  Write-Host ("Package ZIP already exists; skipping build: {0}" -f $expectedZipPath) -ForegroundColor Yellow
+# Skip rebuilds when a ZIP already exists unless the caller explicitly forces a rebuild.
+if ((Test-Path -Path $expectedZipPath) -and (-not $ForceRebuild)) {
+  $null = Sync-PackageMetadata -PackageRoot $packageRoot -ConfigPath $configPath
+  $catalogPath = Update-PackageCatalog -ConfigPath $configPath
+  Write-Host -Object ('Package ZIP already exists; skipped rebuild and refreshed metadata: {0}' -f $expectedZipPath) -ForegroundColor Yellow
+  Write-Host -Object ('Updated package catalog: {0}' -f $catalogPath) -ForegroundColor Green
   return
 }
 
-# Authoring-time prerequisites (modules must exist on the authoring machine so they can be shipped in the package ZIP)
-$requiredDscResourceModules = @("SecurityPolicyDsc")
-foreach ($moduleName in $requiredDscResourceModules) {
-  if (-not (Get-Module -ListAvailable -Name $moduleName)) {
-    throw ("Required DSC resource module '{0}' not found on authoring machine. Install it and retry." -f $moduleName)
-  }
+# Validate that the authoring machine has the required modules.
+if (-not (Get-Module -ListAvailable -Name 'GuestConfiguration')) {
+  throw "PowerShell module 'GuestConfiguration' is required. Install it on the authoring machine first."
+}
+if (-not (Get-Module -ListAvailable -Name 'PSDesiredStateConfiguration')) {
+  throw "PowerShell module 'PSDesiredStateConfiguration' is required. Install it on the authoring machine first."
 }
 
-if (-not (Get-Module -ListAvailable -Name GuestConfiguration)) {
-  throw "PowerShell module 'GuestConfiguration' is required. Install it first: Install-Module GuestConfiguration -Force"
-}
-
-if (-not (Get-Module -ListAvailable -Name PSDesiredStateConfiguration)) {
-  throw "PowerShell module 'PSDesiredStateConfiguration' is required to compile DSC configurations. Install it first: Install-Module PSDesiredStateConfiguration -RequiredVersion 2.0.7 -Force"
-}
-
-Import-Module -Name PSDesiredStateConfiguration -ErrorAction Stop
 Import-Module -Name GuestConfiguration -ErrorAction Stop
+Import-Module -Name PSDesiredStateConfiguration -ErrorAction Stop
 
-# Load the DSC configuration definition
-$configurationScriptPath = Join-Path $packageRoot "Configuration.ps1"
-if (-not (Test-Path $configurationScriptPath)) {
-  throw ("Configuration.ps1 not found: {0}" -f $configurationScriptPath)
+# Load the package configuration script and compile it to MOF.
+$configurationScriptPath = Join-Path -Path $packageRoot -ChildPath 'Configuration.ps1'
+if (-not (Test-Path -Path $configurationScriptPath)) {
+  throw ('Configuration.ps1 not found: {0}' -f $configurationScriptPath)
 }
+
+$configurationName = Get-ConfigurationNameFromFile -Path $configurationScriptPath
 . $configurationScriptPath
+& $configurationName -OutputPath $mofOutputPath
 
-# Compile MOF
-& ACCT_009_Reset_account_lockout_counter_after -OutputPath $mofOutputPath
-
-# DSC outputs node MOFs directly into the -OutputPath directory (for example: "<OutputPath>\localhost.mof").
-# Some patterns also create a nested folder for the configuration name. Handle both to be robust.
+# Support both direct localhost.mof output and nested configuration-name folders.
 $mofCandidatePaths = @(
-  (Join-Path $mofOutputPath "localhost.mof"),
-  (Join-Path (Join-Path $mofOutputPath "ACCT_009_Reset_account_lockout_counter_after") "localhost.mof")
+  (Join-Path -Path $mofOutputPath -ChildPath 'localhost.mof'),
+  (Join-Path -Path (Join-Path -Path $mofOutputPath -ChildPath $configurationName) -ChildPath 'localhost.mof')
 )
 
-$mofFilePath = $mofCandidatePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+$mofFilePath = $mofCandidatePaths | Where-Object { Test-Path -Path $_ } | Select-Object -First 1
 if (-not $mofFilePath) {
-  $found = Get-ChildItem -Path $mofOutputPath -Recurse -Filter "localhost.mof" -ErrorAction SilentlyContinue | Select-Object -First 1
-  if ($found) {
-    $mofFilePath = $found.FullName
+  $discoveredMofFile = Get-ChildItem -Path $mofOutputPath -Recurse -Filter 'localhost.mof' -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($discoveredMofFile) {
+    $mofFilePath = $discoveredMofFile.FullName
   }
 }
 
 if (-not $mofFilePath) {
-  throw ("MOF file not found under output path: {0}" -f $mofOutputPath)
+  throw ('MOF file not found under output path: {0}' -f $mofOutputPath)
 }
-# Create Machine Configuration package ZIP
-if ((Test-Path $expectedZipPath) -and $ForceRebuild) {
+
+if ((Test-Path -Path $expectedZipPath) -and $ForceRebuild) {
   Remove-Item -Path $expectedZipPath -Force
 }
 
+# Build the Guest Configuration ZIP.
 New-GuestConfigurationPackage `
   -Name $packageName `
   -Configuration $mofFilePath `
   -Type $PackageType `
-  -Path $packageZipOutputPath | Out-Null
+  -Path $zipOutputPath | Out-Null
 
-if (-not (Test-Path $expectedZipPath)) {
-  throw ("Package ZIP not found at expected path: {0}" -f $expectedZipPath)
+if (-not (Test-Path -Path $expectedZipPath)) {
+  throw ('Package ZIP was not created: {0}' -f $expectedZipPath)
 }
 
-# Optional: generate the baseline Azure Policy definition JSON (New-GuestConfigurationPolicy)
-$placeholdersPresent = $false
-if (-not $ContentUriBase -or ($ContentUriBase -like "*<storageaccount>*")) { $placeholdersPresent = $true }
-if (-not $UserAssignedIdentityResourceId -or ($UserAssignedIdentityResourceId -like "*/subscriptions/<sub>*")) { $placeholdersPresent = $true }
+# Write back metadata and refresh the runtime catalog.
+$null = Sync-PackageMetadata -PackageRoot $packageRoot -ConfigPath $configPath
+$catalogPath = Update-PackageCatalog -ConfigPath $configPath
 
-if ($placeholdersPresent) {
-  Write-Warning "Skipping baseline policy generation because ContentUriBase and/or RequiredUamiResourceId are not configured (still placeholders)."
-  Write-Warning "You can still build and upload the ZIP. Set values in packages/machine-configuration.config.json and rerun this build to generate baseline policies."
-} else {
-  $contentUri = ("{0}/{1}.zip" -f $ContentUriBase.TrimEnd("/"), $controlId)
-  $policyId = (New-Guid).Guid
-
-  # Capture existing JSON files so we can identify which one(s) New-GuestConfigurationPolicy created.
-  $policyJsonBefore = @()
-  if (Test-Path $policyOutputPath) {
-    $policyJsonBefore = Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File -ErrorAction SilentlyContinue |
-      Select-Object -ExpandProperty FullName
-  }
-
-  New-GuestConfigurationPolicy `
-    -PolicyId $policyId `
-    -ContentUri $contentUri `
-    -DisplayName ("{0} - {1} (Machine Configuration)" -f $policyDisplayId, $settingTitle) `
-    -Description ("Applies Windows Server hardening setting: {0} -> {1} = {2}." -f $settingPath, $settingTitle, $settingSuggestedValue) `
-    -Path $policyOutputPath `
-    -Platform Windows `
-    -PolicyVersion $packageVersion `
-    -Mode $PolicyMode `
-    -LocalContentPath $expectedZipPath `
-    -ManagedIdentityResourceId $UserAssignedIdentityResourceId `
-    -ExcludeArcMachines | Out-Null
-
-  # Azure Portal note:
-  # - When you paste JSON into the Portal "JSON" editor for a policy definition, the Portal expects the *properties object*
-  #   (displayName/mode/metadata/parameters/policyRule) and wraps it in "properties" itself.
-  # - New-GuestConfigurationPolicy writes a full policy definition JSON (with an outer "properties" wrapper).
-  # - Therefore we also emit a *.portal.json variant that contains only the inner properties object.
-  $policyJsonAfter = Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File -ErrorAction SilentlyContinue |
-    Select-Object -ExpandProperty FullName
-  $createdPolicyJson = $policyJsonAfter | Where-Object { $policyJsonBefore -notcontains $_ }
-  if (-not $createdPolicyJson) {
-    # Fallback: take the newest JSON in the output folder
-    $createdPolicyJson = @(Get-ChildItem -Path $policyOutputPath -Filter "*.json" -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Select-Object -ExpandProperty FullName)
-  }
-
-  foreach ($jsonPath in $createdPolicyJson) {
-    try {
-      $policyObject = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json -Depth 100
-      $propertiesObject = if ($policyObject.PSObject.Properties.Name -contains "properties") { $policyObject.properties } else { $policyObject }
-      $portalPath = ($jsonPath -replace "\.json$", ".portal.json")
-      ($propertiesObject | ConvertTo-Json -Depth 100) | Set-Content -Path $portalPath -Encoding UTF8
-    } catch {
-      Write-Warning ("Failed to create portal-friendly JSON variant for: {0}. Error: {1}" -f $jsonPath, $_.Exception.Message)
-    }
-  }
-}
-
-Write-Host "Build completed." -ForegroundColor Green
-Write-Host ("MOF: {0}" -f $mofFilePath)
-Write-Host ("ZIP: {0}" -f $expectedZipPath)
-Write-Host ("Policy output folder: {0}" -f $policyOutputPath)
+Write-Host -Object ('Built package: {0}' -f $expectedZipPath) -ForegroundColor Green
+Write-Host -Object ('Updated package metadata: {0}' -f $metadataPath) -ForegroundColor Green
+Write-Host -Object ('Updated package catalog: {0}' -f $catalogPath) -ForegroundColor Green

@@ -1,78 +1,73 @@
-# win-server-SECO-009 — Network security: LAN Manager authentication level
+# win-server-SECO-009 — Interactive logon: Do not require CTRL+ALT+DEL
 
-**Version:** 1.0.0  
-**Purpose:** Enforce the following setting via Azure Machine Configuration (DSC).  
 - **Setting path:** `Local Policies\Security Options`
-- **Setting:** `Network security: LAN Manager authentication level`
-- **Suggested value:** `Send NTLMv2 response only. Refuse LM & NTLM`
-- **Impact:** `Low/Medium`
+- **Suggested value:** `Disabled (require CTRL+ALT+DEL)`
+- **Default assignmentType:** `ApplyAndAutoCorrect`
 
-## Why this matters
-Forces stronger NTLMv2 authentication and reduces exposure to legacy LM/NTLM weaknesses; may impact very old clients.
+## Checklist
 
-## What this package changes
-- Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\LmCompatibilityLevel` (DWord) = `5`
-
-## How to verify the setting is applied (built-in OS tools)
-
-### GUI verification
-1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
-2. Navigate to: **Local Policies > Security Options**.
-3. Open **Network security: LAN Manager authentication level** and confirm it is set to **Send NTLMv2 response only. Refuse LM & NTLM**.
-
-### Command-line verification
-**Registry check (PowerShell / reg.exe)**
-```cmd
-reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LmCompatibilityLevel
-```
-Expected: `LmCompatibilityLevel` (DWord) = `5`.
-
-## Machine Configuration prerequisites (expected on target VMs)
-These packages assume the VM is prepared for Azure Machine Configuration:
-- **System-assigned managed identity enabled**  
-- **Machine Configuration extension** installed: Publisher `Microsoft.GuestConfiguration`, Type `ConfigurationforWindows`, Name `AzurePolicyforWindows`  
-- **Required user-assigned managed identity (UAMI)** attached to the VM (used via `contentManagedIdentity`)
-
-## DSC configuration
-- Configuration name: `SECO_009_Network_security_LAN_Manager_authentication_level`
-- Source file: `Configuration.ps1`
-
-## Build this package (standalone)
-From this package directory:
+### 1. Build
 ```powershell
-.\build.ps1
+pwsh ./build.ps1
 ```
 
-## Hydrate the enhanced policy JSON for this package
-After uploading the built ZIP and setting `ContentUriBase` + `RequiredUamiResourceId` in `packages/machine-configuration.config.json`:
+Expected:
+- `output/mof/SECO-009/localhost.mof`
+- `output/zip/SECO-009/win-server-SECO-009.zip`
+
+### 2. Hydrate
+Upload the ZIP to Blob Storage. Then:
 ```powershell
-.\hydrate-policy.ps1
+pwsh ./hydrate-policy.ps1
 ```
 
-## Policy files included
-- `policy/deployIfNotExists.json` — baseline policy template
-- `policy/deployIfNotExists.enhanced.sample.json` — enhanced sample with prerequisite checks + UAMI requirement + Windows Server offer/SKU scope
+Expected:
+- `output/policy/SECO-009/deployIfNotExists.json`
+- `output/policy/SECO-009/deployIfNotExists.enhanced.json`
 
-## CIS / benchmarks reference
-WS2016:
-CIS Microsoft Windows Server 2016 Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
-CIS Microsoft Windows Server 2016 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
-WS2019:
-CIS Microsoft Windows Server 2019 STIG Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
-WS2022:
-CIS Microsoft Windows Server 2022 Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
-CIS Microsoft Windows Server 2022 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
-WS2025:
-CIS Microsoft Windows Server 2025 Stand-alone v1.0.0 — Topic area: Security Options; search for: "Network security: LAN Manager authentication level".
+### 3. Import policy
+- Import exactly one of the two hydrated definitions.
+- `deployIfNotExists.json` = standard / non-enhanced
+- `deployIfNotExists.enhanced.json` = enhanced
+- Do not use `*.portal.json`.
 
-**CIS chapter IDs:** TBD (see CIS PDFs / CIS STIG docs)
+### 4. Create assignment
+- `effect = DeployIfNotExists`
+- `assignmentType = ApplyAndAutoCorrect` (for pilot phases, use `Audit` or `ApplyAndMonitor` if needed)
+- Enhanced only: `requiredUserAssignedIdentityResourceId`
 
-## Sources
-- MS baseline mapping (Windows Server 2016/2019/2022):
-  Azure Policy guest configuration baseline for Windows (Server 2016/2019/2022) — search for: Network security: LAN Manager authentication level
-- MS baseline mapping (Windows Server 2025):
-  Azure Policy guest configuration baseline for Windows Server 2025 — search for: Network security: LAN Manager authentication level
-- Machine Configuration package authoring (`New-GuestConfigurationPackage`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
-- Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
+### 5. Verify on the VM
+
+#### Guest Configuration Assignment
+Portal: check **VM > Guest configuration assignments**.
+
+```bash
+az resource list --resource-group <rg> --namespace Microsoft.Compute --resource-type "virtualMachines/providers/guestConfigurationAssignments" --query "[?contains(id, '/virtualMachines/<vmName>/')].[name, properties.guestConfiguration.name, properties.complianceStatus]" -o table
+```
+
+Expected:
+- An assignment for `win-server-SECO-009` exists.
+- `properties.guestConfiguration.name = win-server-SECO-009`
+- With `ApplyAndMonitor` / `ApplyAndAutoCorrect`, the VM becomes `Compliant` after successful evaluation.
+- With `Audit`, the VM is `NonCompliant` when the evaluated deviation is detected.
+
+#### Agent / Guest Configuration log
+```powershell
+$logs = Get-ChildItem -Path 'C:\ProgramData\GuestConfig' -Recurse -File -ErrorAction SilentlyContinue |
+  Sort-Object LastWriteTime -Descending
+$logs | Select-Object -First 20 FullName, LastWriteTime
+Get-Content -Path $logs[0].FullName -Tail 200
+```
+
+Expected:
+- recent entries for `win-server-SECO-009`
+- no recurring persistent errors
+
+#### Target setting
+GUI: open `secpol.msc` and navigate to `Local Policies > Security Options`.
+
+```powershell
+Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' | Select-Object DisableCAD
+```
+
+Expected target value: DisableCAD = 0 (Disabled (require CTRL+ALT+DEL))

@@ -1,0 +1,17 @@
+{
+  "controlId": "RDP-001",
+  "baseControlId": "RDP-001",
+  "definitionName": "win-server-RDP-001",
+  "displayNameSuffix": "Require user authentication for remote connections by using Network Level Authentication (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Computer Configuration\\Administrative Templates\\Windows Components\\Remote Desktop Services\\Remote Desktop Session Host\\Security -> Require user authentication for remote connections by using Network Level Authentication = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-RDP-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-RDP-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-RDP-001.zip",
+  "packageZipRelativePath": "output/zip/RDP-001/win-server-RDP-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

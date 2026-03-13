@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-002",
+  "baseControlId": "SECO-002",
+  "definitionName": "win-server-SECO-002",
+  "displayNameSuffix": "Accounts: Guest account status (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Accounts: Guest account status = Disabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-002.zip",
+  "packageZipRelativePath": "output/zip/SECO-002/win-server-SECO-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

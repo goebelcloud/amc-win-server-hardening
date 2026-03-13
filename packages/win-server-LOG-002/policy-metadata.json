@@ -1,0 +1,17 @@
+{
+  "controlId": "LOG-002",
+  "baseControlId": "LOG-002",
+  "definitionName": "win-server-LOG-002",
+  "displayNameSuffix": "Increase Security log maximum size (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Event Logs -> Increase Security log maximum size = >= 196,608 KB (192 MB) (tune for environment).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-LOG-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-LOG-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-LOG-002.zip",
+  "packageZipRelativePath": "output/zip/LOG-002/win-server-LOG-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

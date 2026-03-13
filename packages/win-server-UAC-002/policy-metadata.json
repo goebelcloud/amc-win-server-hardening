@@ -1,0 +1,17 @@
+{
+  "controlId": "UAC-002",
+  "baseControlId": "UAC-002",
+  "definitionName": "win-server-UAC-002",
+  "displayNameSuffix": "User Account Control: Switch to the secure desktop when prompting for elevation (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> User Account Control: Switch to the secure desktop when prompting for elevation = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-UAC-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-UAC-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-UAC-002.zip",
+  "packageZipRelativePath": "output/zip/UAC-002/win-server-UAC-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

@@ -1,0 +1,224 @@
+{
+  "name": "__POLICY_NAME__",
+  "properties": {
+    "displayName": "__DISPLAY_NAME__",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "__DESCRIPTION__",
+    "metadata": {
+      "category": "Machine Configuration",
+      "version": "1.0.0",
+      "controlId": "__CONTROL_ID__",
+      "baseControlId": "__BASE_CONTROL_ID__",
+      "guestConfiguration": {
+        "name": "__GUEST_CONFIGURATION_NAME__",
+        "version": "1.0.0",
+        "contentType": "Custom",
+        "contentUri": "__CONTENT_URI__",
+        "contentHash": "__CONTENT_HASH__",
+        "contentManagedIdentity": "__CONTENT_MANAGED_IDENTITY__",
+        "configurationParameter": "__METADATA_CONFIGURATION_PARAMETERS__"
+      },
+      "requiredProviders": [
+        "Microsoft.GuestConfiguration"
+      ]
+    },
+    "parameters": {
+      "requiredUserAssignedIdentityResourceId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Required UAMI resource ID",
+          "description": "User-assigned managed identity that must be attached to the VM."
+        },
+        "defaultValue": "__REQUIRED_UAMI_DEFAULT__"
+      },
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable this policy."
+        },
+        "allowedValues": [
+          "DeployIfNotExists",
+          "Disabled"
+        ],
+        "defaultValue": "DeployIfNotExists"
+      },
+      "assignmentType": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Machine Configuration assignment type",
+          "description": "How Machine Configuration should evaluate or apply the setting."
+        },
+        "allowedValues": [
+          "Audit",
+          "ApplyAndMonitor",
+          "ApplyAndAutoCorrect"
+        ],
+        "defaultValue": "__ASSIGNMENT_TYPE_DEFAULT__"
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Compute/virtualMachines"
+          },
+          {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Compute/imagePublisher",
+                    "equals": "MicrosoftWindowsServer"
+                  },
+                  {
+                    "field": "Microsoft.Compute/imageOffer",
+                    "equals": "WindowsServer"
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2008-R2-SP1*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2012-*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2016-*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2019-*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2022-*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageSku",
+                        "like": "2025-*"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Compute/imagePublisher",
+                    "equals": "MicrosoftSQLServer"
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "field": "Microsoft.Compute/imageOffer",
+                        "like": "sql2017-ws20*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageOffer",
+                        "like": "sql2019-ws20*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageOffer",
+                        "like": "sql2022-ws20*"
+                      },
+                      {
+                        "field": "Microsoft.Compute/imageOffer",
+                        "like": "sql2025-ws20*"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "field": "identity.type",
+            "contains": "SystemAssigned"
+          },
+          {
+            "value": "[containsKey(field('identity.userAssignedIdentities'), parameters('requiredUserAssignedIdentityResourceId'))]",
+            "equals": true
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]",
+        "details": {
+          "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
+          "name": "__ASSIGNMENT_NAME_EXPRESSION__",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/088ab73d-1256-47ae-bea9-9de8e7131f31"
+          ],
+          "existenceCondition": {
+            "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+            "equals": "Compliant"
+          },
+          "evaluationDelay": "AfterProvisioningSuccess",
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "parameters": {
+                "vmName": {
+                  "value": "[field('name')]"
+                },
+                "location": {
+                  "value": "[field('location')]"
+                },
+                "assignmentType": {
+                  "value": "[parameters('assignmentType')]"
+                },
+                "assignmentName": {
+                  "value": "__ASSIGNMENT_NAME_EXPRESSION__"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "vmName": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "assignmentType": {
+                    "type": "string"
+                  },
+                  "assignmentName": {
+                    "type": "string"
+                  }
+                },
+                "resources": [
+                  {
+                    "apiVersion": "2024-04-05",
+                    "type": "Microsoft.Compute/virtualMachines/providers/guestConfigurationAssignments",
+                    "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/', parameters('assignmentName'))]",
+                    "location": "[parameters('location')]",
+                    "properties": {
+                      "guestConfiguration": {
+                        "name": "__GUEST_CONFIGURATION_NAME__",
+                        "version": "1.0.0",
+                        "contentUri": "__CONTENT_URI__",
+                        "contentHash": "__CONTENT_HASH__",
+                        "contentManagedIdentity": "__CONTENT_MANAGED_IDENTITY__",
+                        "assignmentType": "[parameters('assignmentType')]",
+                        "configurationParameter": "__DEPLOYMENT_CONFIGURATION_PARAMETERS__",
+                        "contentType": "Custom"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

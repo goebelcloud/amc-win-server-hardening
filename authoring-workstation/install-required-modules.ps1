@@ -1,133 +1,132 @@
 <#
 .SYNOPSIS
-  Installs PowerShell modules required to build Azure Machine Configuration (Guest Configuration) packages.
+  Install PowerShell modules required to author and validate the packages in this repository.
 
 .DESCRIPTION
-  This repository builds Machine Configuration packages using:
-    - GuestConfiguration (authoring module)
-    - PSDesiredStateConfiguration (DSC engine / configuration compilation)
-    - PSDscResources (common DSC resources used by most packages)
-    - SecurityPolicyDsc (DSC Community module used by the AccountPolicy packages)
-
-  Microsoft guidance for Windows authoring environments recommends using
-  PSDesiredStateConfiguration version 2.0.7 (stable) when compiling Windows configurations.
-
-  Run in a PowerShell session on the build workstation (Windows recommended).
-
-.PARAMETER Force
-  Reinstall modules even if already present.
-
-.PARAMETER Scope
-  Installation scope for Install-Module (CurrentUser or AllUsers).
-
-.NOTES
-  File: install-required-modules.ps1
-  Version: 1.2.0
-  Repo: Azure Machine Configuration package authoring (Windows VMs)
+  This script installs the module set expected by the package authoring workflow,
+  imports the modules, and validates the DSC resources that are required by the
+  package configurations in this repository.
 #>
 
 [CmdletBinding()]
 param(
+  [Parameter()]
   [switch]$Force,
 
-  [ValidateSet("CurrentUser","AllUsers")]
-  [string]$Scope = "CurrentUser"
+  [Parameter()]
+  [ValidateSet('CurrentUser', 'AllUsers')]
+  [string]$Scope = 'CurrentUser'
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-# Platform detection:
-# The authoring workflow is primarily intended for Windows. We still attempt to behave sensibly
-# when executed in PowerShell 7 on non-Windows platforms (for example, for linting or reading files).
-
-# Determine Windows vs non-Windows reliably (Windows PowerShell 5.1 doesn't define $IsWindows)
+# Determine whether the current session is running on Windows so the correct
+# PSDesiredStateConfiguration version can be chosen.
 $isWindowsPlatform = $false
-if ($env:OS -eq "Windows_NT") { $isWindowsPlatform = $true }
-elseif (Get-Variable -Name IsWindows -Scope Global -ErrorAction SilentlyContinue) { $isWindowsPlatform = [bool]$IsWindows }
+if ($env:OS -eq 'Windows_NT') {
+  $isWindowsPlatform = $true
+}
+elseif (Get-Variable -Name IsWindows -Scope Global -ErrorAction SilentlyContinue) {
+  $isWindowsPlatform = [bool]$IsWindows
+}
 
+# Force TLS 1.2 where possible for older PowerShell environments.
+try {
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
+catch {
+}
 
-Write-Host "Installing required modules for Machine Configuration authoring..." -ForegroundColor Cyan
-Write-Host " - Scope: $Scope" -ForegroundColor Cyan
-Write-Host " - Force: $Force" -ForegroundColor Cyan
-
-# TLS/Package provider setup:
-# Older Windows builds may default to TLS versions that cannot negotiate with PowerShell Gallery.
-# We force TLS 1.2 and ensure NuGet provider is present so Install-Module works reliably.
-
-# Ensure TLS 1.2 for older environments
-try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
-
-# Ensure NuGet provider exists
+# Ensure the NuGet provider exists before module installation begins.
 if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
   Install-PackageProvider -Name NuGet -Force -Scope $Scope | Out-Null
 }
 
-# Module list:
-# These modules are required on the *authoring* VM only. The build process packages the DSC resources into the ZIP,
-# so target VMs do not need these modules preinstalled.
-
-# Required modules
 $requiredModules = @(
-  @{ Name = "GuestConfiguration"; RequiredVersion = $null; AllowPrerelease = $false }
-  @{ Name = "PSDesiredStateConfiguration"; RequiredVersion = $null; AllowPrerelease = $false }
-  @{ Name = "PSDscResources"; RequiredVersion = $null; AllowPrerelease = $false }
-  @{ Name = "SecurityPolicyDsc"; RequiredVersion = "2.10.0.0"; AllowPrerelease = $false }
+  @{ Name = 'GuestConfiguration';           RequiredVersion = $null;      AllowPrerelease = $false }
+  @{ Name = 'PSDesiredStateConfiguration'; RequiredVersion = $null;      AllowPrerelease = $false }
+  @{ Name = 'PSDscResources';              RequiredVersion = $null;      AllowPrerelease = $false }
+  @{ Name = 'SecurityPolicyDsc';           RequiredVersion = '2.10.0.0'; AllowPrerelease = $false }
 )
 
-# On Windows, Microsoft recommends PSDesiredStateConfiguration 2.0.7 for compiling Windows configs.
+# Match PSDesiredStateConfiguration to the local platform/runtime.
 if ($isWindowsPlatform) {
-  ($requiredModules | Where-Object { $_.Name -eq "PSDesiredStateConfiguration" }).RequiredVersion = "2.0.7"
-} else {
-  # Non-Windows authoring is possible, but these packages target Windows VMs.
-  # Use prerelease DSC v3 if someone insists on building on Linux/macOS.
-  ($requiredModules | Where-Object { $_.Name -eq "PSDesiredStateConfiguration" }).RequiredVersion = "3.0.0-beta1"
-  ($requiredModules | Where-Object { $_.Name -eq "PSDesiredStateConfiguration" }).AllowPrerelease = $true
+  ($requiredModules | Where-Object { $_.Name -eq 'PSDesiredStateConfiguration' }).RequiredVersion = '2.0.7'
+}
+else {
+  ($requiredModules | Where-Object { $_.Name -eq 'PSDesiredStateConfiguration' }).RequiredVersion = '3.0.0-beta1'
+  ($requiredModules | Where-Object { $_.Name -eq 'PSDesiredStateConfiguration' }).AllowPrerelease = $true
 }
 
-foreach ($module in $requiredModules) {
-  $name = $module.Name
-  $requiredVersion = $module.RequiredVersion
-  $allowPrerelease = [bool]$module.AllowPrerelease
+# Install missing modules or reinstall them when -Force is used.
+foreach ($requiredModule in $requiredModules) {
+  $moduleName = $requiredModule.Name
+  $requiredVersion = $requiredModule.RequiredVersion
+  $allowPrerelease = [bool]$requiredModule.AllowPrerelease
 
-  $installed = Get-Module -ListAvailable -Name $name | Sort-Object Version -Descending | Select-Object -First 1
-  $alreadyOk = $false
+  $installedModule = Get-Module -ListAvailable -Name $moduleName | Sort-Object -Property Version -Descending | Select-Object -First 1
+  $moduleAlreadySatisfiesRequirement = $false
 
-  if ($installed) {
+  if ($installedModule) {
     if ($requiredVersion) {
-      if ($installed.Version -eq [version]$requiredVersion) { $alreadyOk = $true }
-    } else {
-      $alreadyOk = $true
+      if ($installedModule.Version -eq [version]$requiredVersion) {
+        $moduleAlreadySatisfiesRequirement = $true
+      }
+    }
+    else {
+      $moduleAlreadySatisfiesRequirement = $true
     }
   }
 
-  if ($alreadyOk -and (-not $Force)) {
-    Write-Host " - $name already installed ($($installed.Version)). Skipping." -ForegroundColor Yellow
+  if ($moduleAlreadySatisfiesRequirement -and (-not $Force)) {
+    Write-Host -Object ('{0} already installed ({1}).' -f $moduleName, $installedModule.Version) -ForegroundColor Yellow
     continue
   }
 
   if ($requiredVersion) {
-    Write-Host " - Installing $name (RequiredVersion $requiredVersion)..." -ForegroundColor Green
-    Install-Module -Name $name -RequiredVersion $requiredVersion -Scope $Scope -Force:$Force -AllowClobber -AllowPrerelease:$allowPrerelease
-  } else {
-    Write-Host " - Installing $name..." -ForegroundColor Green
-    Install-Module -Name $name -Scope $Scope -Force:$Force -AllowClobber -AllowPrerelease:$allowPrerelease
+    Install-Module -Name $moduleName -RequiredVersion $requiredVersion -Scope $Scope -Force:$Force -AllowClobber -AllowPrerelease:$allowPrerelease
+  }
+  else {
+    Install-Module -Name $moduleName -Scope $Scope -Force:$Force -AllowClobber -AllowPrerelease:$allowPrerelease
   }
 }
 
-# Import and sanity-check core commands
+# Import all required modules explicitly so failures are visible immediately.
 Import-Module -Name GuestConfiguration -ErrorAction Stop
 Import-Module -Name PSDesiredStateConfiguration -ErrorAction Stop
+Import-Module -Name PSDscResources -ErrorAction Stop
+Import-Module -Name SecurityPolicyDsc -ErrorAction Stop
 
 $requiredCommands = @(
-  "New-GuestConfigurationPackage",
-  "New-GuestConfigurationPolicy"
+  'New-GuestConfigurationPackage',
+  'Get-GuestConfigurationPackageComplianceStatus'
 )
 
-foreach ($cmd in $requiredCommands) {
-  if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-    throw "Required command not found after installation: $cmd"
+foreach ($requiredCommand in $requiredCommands) {
+  if (-not (Get-Command -Name $requiredCommand -ErrorAction SilentlyContinue)) {
+    throw ('Required command not found after installation: {0}' -f $requiredCommand)
   }
 }
 
-Write-Host "Module installation and sanity-check completed successfully." -ForegroundColor Cyan
+$requiredDscResources = @(
+  @{ Name = 'File';                   ModuleName = 'PSDscResources' },
+  @{ Name = 'Registry';               ModuleName = 'PSDscResources' },
+  @{ Name = 'Script';                 ModuleName = 'PSDscResources' },
+  @{ Name = 'AccountPolicy';          ModuleName = 'SecurityPolicyDsc' },
+  @{ Name = 'AuditPolicySubcategory'; ModuleName = 'SecurityPolicyDsc' },
+  @{ Name = 'SecurityOption';         ModuleName = 'SecurityPolicyDsc' }
+)
+
+# Validate that the DSC resources required by the package configurations are available.
+foreach ($requiredResource in $requiredDscResources) {
+  $discoveredResource = Get-DscResource -Name $requiredResource.Name -ErrorAction SilentlyContinue |
+    Where-Object { $_.ModuleName -eq $requiredResource.ModuleName } |
+    Select-Object -First 1
+
+  if (-not $discoveredResource) {
+    throw ('Required DSC resource not found after installation: {0} from module {1}' -f $requiredResource.Name, $requiredResource.ModuleName)
+  }
+}
+
+Write-Host -Object 'Module installation completed successfully.' -ForegroundColor Green

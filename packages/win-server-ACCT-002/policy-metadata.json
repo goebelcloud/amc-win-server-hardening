@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-002",
+  "baseControlId": "ACCT-002",
+  "definitionName": "win-server-ACCT-002",
+  "displayNameSuffix": "Maximum password age (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Password Policy -> Maximum password age = 60 days (or org standard 60–90).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-002.zip",
+  "packageZipRelativePath": "output/zip/ACCT-002/win-server-ACCT-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

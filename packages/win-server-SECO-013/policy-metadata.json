@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-013",
+  "baseControlId": "SECO-012",
+  "definitionName": "win-server-SECO-013",
+  "displayNameSuffix": "Microsoft network client: Digitally sign communications (always) (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Microsoft network client: Digitally sign communications (always) = Enabled (SMB signing required for outbound SMB client traffic).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-013",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-013.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-013.zip",
+  "packageZipRelativePath": "output/zip/SECO-013/win-server-SECO-013.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

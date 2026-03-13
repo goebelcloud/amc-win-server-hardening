@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-010",
+  "baseControlId": "SECO-016",
+  "definitionName": "win-server-SECO-010",
+  "displayNameSuffix": "Interactive logon: Machine inactivity limit (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Interactive logon: Machine inactivity limit = 900 seconds (15 minutes).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-010",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-010.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-010.zip",
+  "packageZipRelativePath": "output/zip/SECO-010/win-server-SECO-010.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

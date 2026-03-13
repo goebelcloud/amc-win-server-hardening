@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-008",
+  "baseControlId": "SECO-014",
+  "definitionName": "win-server-SECO-008",
+  "displayNameSuffix": "Interactive logon: Do not display last user name (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Interactive logon: Do not display last user name = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-008",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-008.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-008.zip",
+  "packageZipRelativePath": "output/zip/SECO-008/win-server-SECO-008.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

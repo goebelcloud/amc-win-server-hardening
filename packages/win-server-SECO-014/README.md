@@ -1,78 +1,73 @@
-# win-server-SECO-014 — Interactive logon: Do not display last user name
+# win-server-SECO-014 — Microsoft network server: Digitally sign communications (always)
 
-**Version:** 1.0.0  
-**Purpose:** Enforce the following setting via Azure Machine Configuration (DSC).  
 - **Setting path:** `Local Policies\Security Options`
-- **Setting:** `Interactive logon: Do not display last user name`
-- **Suggested value:** `Enabled`
-- **Impact:** `Low`
+- **Suggested value:** `Enabled (SMB signing required for inbound SMB server traffic)`
+- **Default assignmentType:** `ApplyAndAutoCorrect`
 
-## Why this matters
-Reduces username disclosure at the console/RDP logon screen.
+## Checklist
 
-## What this package changes
-- Registry: `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\DontDisplayLastUserName` (DWord) = `1`
-
-## How to verify the setting is applied (built-in OS tools)
-
-### GUI verification
-1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
-2. Navigate to: **Local Policies > Security Options**.
-3. Open **Interactive logon: Do not display last user name** and confirm it is set to **Enabled**.
-
-### Command-line verification
-**Registry check (PowerShell / reg.exe)**
-```cmd
-reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v DontDisplayLastUserName
-```
-Expected: `DontDisplayLastUserName` (DWord) = `1`.
-
-## Machine Configuration prerequisites (expected on target VMs)
-These packages assume the VM is prepared for Azure Machine Configuration:
-- **System-assigned managed identity enabled**  
-- **Machine Configuration extension** installed: Publisher `Microsoft.GuestConfiguration`, Type `ConfigurationforWindows`, Name `AzurePolicyforWindows`  
-- **Required user-assigned managed identity (UAMI)** attached to the VM (used via `contentManagedIdentity`)
-
-## DSC configuration
-- Configuration name: `SECO_014_Interactive_logon_Do_not_display_last_user_name`
-- Source file: `Configuration.ps1`
-
-## Build this package (standalone)
-From this package directory:
+### 1. Build
 ```powershell
-.\build.ps1
+pwsh ./build.ps1
 ```
 
-## Hydrate the enhanced policy JSON for this package
-After uploading the built ZIP and setting `ContentUriBase` + `RequiredUamiResourceId` in `packages/machine-configuration.config.json`:
+Expected:
+- `output/mof/SECO-014/localhost.mof`
+- `output/zip/SECO-014/win-server-SECO-014.zip`
+
+### 2. Hydrate
+Upload the ZIP to Blob Storage. Then:
 ```powershell
-.\hydrate-policy.ps1
+pwsh ./hydrate-policy.ps1
 ```
 
-## Policy files included
-- `policy/deployIfNotExists.json` — baseline policy template
-- `policy/deployIfNotExists.enhanced.sample.json` — enhanced sample with prerequisite checks + UAMI requirement + Windows Server offer/SKU scope
+Expected:
+- `output/policy/SECO-014/deployIfNotExists.json`
+- `output/policy/SECO-014/deployIfNotExists.enhanced.json`
 
-## CIS / benchmarks reference
-WS2016:
-CIS Microsoft Windows Server 2016 Benchmark v4.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
-CIS Microsoft Windows Server 2016 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
-WS2019:
-CIS Microsoft Windows Server 2019 STIG Benchmark v4.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
-WS2022:
-CIS Microsoft Windows Server 2022 Benchmark v4.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
-CIS Microsoft Windows Server 2022 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
-WS2025:
-CIS Microsoft Windows Server 2025 Stand-alone v1.0.0 — Topic area: Security Options; search for: "Interactive logon: Do not display last user name".
+### 3. Import policy
+- Import exactly one of the two hydrated definitions.
+- `deployIfNotExists.json` = standard / non-enhanced
+- `deployIfNotExists.enhanced.json` = enhanced
+- Do not use `*.portal.json`.
 
-**CIS chapter IDs:** TBD (see CIS PDFs / CIS STIG docs)
+### 4. Create assignment
+- `effect = DeployIfNotExists`
+- `assignmentType = ApplyAndAutoCorrect` (for pilot phases, use `Audit` or `ApplyAndMonitor` if needed)
+- Enhanced only: `requiredUserAssignedIdentityResourceId`
 
-## Sources
-- MS baseline mapping (Windows Server 2016/2019/2022):
-  Azure Policy guest configuration baseline for Windows (Server 2016/2019/2022) — search for: Interactive logon: Do not display last user name
-- MS baseline mapping (Windows Server 2025):
-  Azure Policy guest configuration baseline for Windows Server 2025 — search for: Interactive logon: Do not display last user name
-- Machine Configuration package authoring (`New-GuestConfigurationPackage`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
-- Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
+### 5. Verify on the VM
+
+#### Guest Configuration Assignment
+Portal: check **VM > Guest configuration assignments**.
+
+```bash
+az resource list --resource-group <rg> --namespace Microsoft.Compute --resource-type "virtualMachines/providers/guestConfigurationAssignments" --query "[?contains(id, '/virtualMachines/<vmName>/')].[name, properties.guestConfiguration.name, properties.complianceStatus]" -o table
+```
+
+Expected:
+- An assignment for `win-server-SECO-014` exists.
+- `properties.guestConfiguration.name = win-server-SECO-014`
+- With `ApplyAndMonitor` / `ApplyAndAutoCorrect`, the VM becomes `Compliant` after successful evaluation.
+- With `Audit`, the VM is `NonCompliant` when the evaluated deviation is detected.
+
+#### Agent / Guest Configuration log
+```powershell
+$logs = Get-ChildItem -Path 'C:\ProgramData\GuestConfig' -Recurse -File -ErrorAction SilentlyContinue |
+  Sort-Object LastWriteTime -Descending
+$logs | Select-Object -First 20 FullName, LastWriteTime
+Get-Content -Path $logs[0].FullName -Tail 200
+```
+
+Expected:
+- recent entries for `win-server-SECO-014`
+- no recurring persistent errors
+
+#### Target setting
+GUI: open `secpol.msc` and navigate to `Local Policies > Security Options`.
+
+```powershell
+Get-SmbServerConfiguration | Select-Object RequireSecuritySignature, EnableSecuritySignature
+```
+
+Expected target value: RequireSecuritySignature = True.

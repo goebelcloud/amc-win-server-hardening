@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-015",
+  "baseControlId": "SECO-003",
+  "definitionName": "win-server-SECO-015",
+  "displayNameSuffix": "Audit: No local account uses the name 'Administrator' (Machine Configuration)",
+  "descriptionText": "Audits local users and marks the VM non-compliant when at least one local account uses the name 'Administrator'. No remediation is performed.",
+  "assignmentTypeDefault": "Audit",
+  "guestConfigurationName": "win-server-SECO-015",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-015.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-015.zip",
+  "packageZipRelativePath": "output/zip/SECO-015/win-server-SECO-015.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

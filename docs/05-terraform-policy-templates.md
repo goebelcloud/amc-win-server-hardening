@@ -1,67 +1,108 @@
-# Terraform deployment of hydrated Machine Configuration policies
+# Terraform / Azure DevOps: central templates + metadata + `jsonencode()`
 
-This repository supports Terraform-based deployment of Azure Policy definitions and assignments for Azure Machine Configuration (Guest Configuration).
+## Target model
+Policy definitions are no longer derived from package-local JSON files or `templatefile` variants.
 
-## Key design decision: what is a policy parameter vs. what must be injected
+Instead, use this model:
 
-### Azure Policy parameters (assignment-time)
-These are expressed as **Azure Policy parameters** in the policy JSON and can be supplied by Terraform at policy assignment time:
+- central templates under `policy-templates/`
+- exactly one `policy-metadata.json` file per package
+- definitions and properties built from metadata
+- serialization with `jsonencode()` / `ConvertTo-Json`
+- no portal-specific files
 
-- `effect`  
-  - Allowed: `DeployIfNotExists`, `Disabled`
-- `assignmentType` (Machine Configuration behavior)  
-  - Allowed: `Audit`, `ApplyAndMonitor`, `ApplyAndAutoCorrect`
-- (Enhanced policies only) `requiredUserAssignedIdentityResourceId`  
-  - Used to check the VM has the expected UAMI attached
+## Why not `templatefile`
+Using `templatefile` with large JSON strings becomes hard to manage once package-specific edge cases accumulate:
 
-### Values that must be injected (definition-time)
-The following values are required to be **concrete** inside the policy JSON so Machine Configuration can download and validate the package:
+- harder to review
+- more vulnerable to parameter drift
+- harder to understand for package-specific metadata
+- unnecessary when the definition can already be built as an object
 
-- `contentUri`
-- `contentHash` (SHA256 of the package ZIP)
-- `contentManagedIdentity` (UAMI resourceId used to download the package)
+## Terraform pattern
+Example for a single package:
 
-These are not implemented as Azure Policy parameters in this repo. Instead, they are populated by the hydrate scripts.
+```hcl
+locals {
+  package_root = "${path.module}/packages/win-server-ACCT-001"
+  metadata     = jsondecode(file("${local.package_root}/policy-metadata.json"))
 
-## Workflow overview (Azure DevOps pipeline friendly)
+  policy_display_name = var.policy_display_prefix != "" ?
+    "${var.policy_display_prefix}${local.metadata.controlId} - ${local.metadata.displayNameSuffix}" :
+    "${local.metadata.controlId} - ${local.metadata.displayNameSuffix}"
 
-### Stage A — Build packages and upload ZIPs
-1. On the authoring workstation, build packages:
-   ```powershell
-   .\scripts\build-all.ps1
-   ```
-2. Upload the ZIP outputs from your configured output folder (see `packages/machine-configuration.config.json`) to your storage location.
+  policy_definition = {
+    name = local.metadata.definitionName
+    properties = {
+      displayName = local.policy_display_name
+      policyType  = "Custom"
+      mode        = "Indexed"
+      description = local.metadata.descriptionText
+      metadata = {
+        category      = "Machine Configuration"
+        version       = "1.0.0"
+        controlId     = local.metadata.controlId
+        baseControlId = local.metadata.baseControlId
+      }
+      parameters = {
+        effect = {
+          type         = "String"
+          defaultValue = "DeployIfNotExists"
+        }
+        assignmentType = {
+          type         = "String"
+          defaultValue = local.metadata.assignmentTypeDefault
+        }
+      }
+      policyRule = local.rendered_policy_rule
+    }
+  }
+}
 
-### Stage B — Hydrate policy JSON (inject contentUri/contentHash/UAMI)
-1. Set these values in `packages/machine-configuration.config.json`:
-   - `ContentUriBase`
-   - `RequiredUamiResourceId`
-2. Hydrate all enhanced policies:
-   ```powershell
-   .\scripts\hydrate-policy-templates.ps1
-   ```
-   This produces **ready-to-import** JSON files under the configured policy output folder.
+resource "azurerm_policy_definition" "this" {
+  name         = local.policy_definition.name
+  policy_type  = local.policy_definition.properties.policyType
+  mode         = local.policy_definition.properties.mode
+  display_name = local.policy_definition.properties.displayName
+  description  = local.policy_definition.properties.description
+  metadata     = jsonencode(local.policy_definition.properties.metadata)
+  parameters   = jsonencode(local.policy_definition.properties.parameters)
+  policy_rule  = jsonencode(local.policy_definition.properties.policyRule)
+}
+```
 
-### Stage C — Terraform deploy
-Terraform should:
-- create/update **policy definitions** using the hydrated JSON files from the output folder
-- create policy assignments and pass only the policy parameters (`effect`, `assignmentType`, and for enhanced policies `requiredUserAssignedIdentityResourceId`)
+The important part is the pattern itself:
+- read metadata
+- assemble the policy object
+- serialize to JSON only at the end with `jsonencode()`
 
-## Terraform patterns (recommended)
+## Azure DevOps / PowerShell pattern
+Pipelines should also work object-first:
 
-### 1) Treat hydrated policy JSON as build artifacts
-In Azure DevOps:
-- publish the hydrated policy JSON folder as a pipeline artifact
-- in the Terraform stage, download the artifact and point Terraform at the JSON files on disk
+```powershell
+$metadata = Get-Content ./packages/win-server-ACCT-001/policy-metadata.json -Raw | ConvertFrom-Json
 
-### 2) Use policy assignment parameters for effect + assignmentType
-Example (conceptual):
-- `effect = "DeployIfNotExists"`
-- `assignmentType = "ApplyAndAutoCorrect"`
-- `requiredUserAssignedIdentityResourceId = <uamiResourceId>`
+$policyDefinition = @{
+  name = $metadata.definitionName
+  properties = @{
+    displayName = "{0} - {1}" -f $metadata.controlId, $metadata.displayNameSuffix
+    policyType  = "Custom"
+    mode        = "Indexed"
+    description = $metadata.descriptionText
+    metadata    = @{
+      category      = "Machine Configuration"
+      version       = "1.0.0"
+      controlId     = $metadata.controlId
+      baseControlId = $metadata.baseControlId
+    }
+  }
+}
 
-This keeps the policy definition stable while allowing per-environment behavior changes via Terraform parameters.
+$policyJson = $policyDefinition | ConvertTo-Json -Depth 100
+```
 
-## Notes
-- This repo keeps descriptive text in `displayName` and `description` for humans.
-- Scoping remains **Windows Server only** via `imageOffer` + `imageSKU` in enhanced policies.
+## Package-specific special values
+Package-specific values such as guest-account renames are not modeled as Azure Policy parameters. They remain in `policy-metadata.json` and are injected into the Guest Configuration definition during hydration.
+
+## Conclusion
+Prefer a metadata-driven object model and serialize only at the outer edge. That keeps the central templates stable and makes per-package behavior easier to track.

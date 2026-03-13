@@ -1,50 +1,30 @@
 <#
-.SYNOPSIS
-  win-server-SECO-003 — Audit built-in Administrator account name (RID 500).
-
-.DESCRIPTION
-  Audits that the built-in local Administrator account (RID 500 / SID S-1-5-21-*-500) is NOT using the default name "Administrator".
-  This package is AUDIT-ONLY (no remediation). It is intended for Azure Machine Configuration (Guest Configuration).
-
-.VERSION
-  1.0.0
-
-.FILE
-  Configuration.ps1
+File: Configuration.ps1
+Package: win-server-SECO-003 - Network access: Do not allow anonymous enumeration of SAM accounts
+Purpose: Enforces 'Network access: Do not allow anonymous enumeration of SAM accounts' by setting HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\RestrictAnonymousSAM to 1.
+Version: 1.0.0
 #>
 
-# win-server-SECO-003: Audit: Built-in Administrator (RID 500) is not named 'Administrator'
+# win-server-SECO-003: Network access: Do not allow anonymous enumeration of SAM accounts
 # This DSC configuration targets the local security policy setting:
-#   Security Options > Accounts -> Audit: Built-in Administrator (RID 500) is not named 'Administrator' = Compliant if Name != 'Administrator' (audit only; no remediation)
-# Expected impact: Low (audit only)
+#   Local Policies\Security Options -> Network access: Do not allow anonymous enumeration of SAM accounts = Enabled
+# Expected impact: Low
 #
 # Implementation notes:
 #   - This configuration is intended for standalone Windows Server VMs (no domain/GPO required).
 #   - The DSC resource block below applies the setting locally (for example via security policy areas or registry-backed policy, depending on resource).
 
-Configuration SECO_003_AuditAdminNotDefaultName {
-  Import-DscResource -ModuleName "PSDscResources"
+Configuration SECO_003_Network_access_Do_not_allow_anonymous_enumeration_o {
+    Import-DscResource -ModuleName PSDscResources
 
-  Node "localhost" {
-    Script AuditAdministratorAccountNotDefaultName {
-      GetScript = {
-        $admin = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE 'S-1-5-21-%-500'" | Select-Object -First 1
-        if (-not $admin) {
-          return @{ Result = "Built-in Administrator (RID 500) not found via Win32_UserAccount filter." }
+    Node "localhost" {
+        Registry "win-server-SECO-003_1" {
+            Ensure    = "Present"
+            Key       = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa"
+            ValueName = "RestrictAnonymousSAM"
+            ValueData = @("1")
+            ValueType = "DWord"
         }
-        return @{ Result = "Name=$($admin.Name); SID=$($admin.SID); Disabled=$($admin.Disabled)" }
-      }
 
-      TestScript = {
-        $admin = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount=True AND SID LIKE 'S-1-5-21-%-500'" | Select-Object -First 1
-        if (-not $admin) { return $false }
-        # Compliant when the RID-500 account is NOT using the default name "Administrator"
-        return ($admin.Name -ne "Administrator")
-      }
-
-      SetScript = {
-        # Audit-only package: no remediation is performed.
-      }
     }
-  }
 }

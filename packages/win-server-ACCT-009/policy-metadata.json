@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-009",
+  "baseControlId": "ACCT-009",
+  "definitionName": "win-server-ACCT-009",
+  "displayNameSuffix": "Reset account lockout counter after (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Account Lockout Policy -> Reset account lockout counter after = 15 minutes.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-009",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-009.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-009.zip",
+  "packageZipRelativePath": "output/zip/ACCT-009/win-server-ACCT-009.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

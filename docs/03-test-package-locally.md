@@ -1,47 +1,27 @@
-# 03 — Test a package locally (no Azure)
+# Test packages locally
 
-This guide validates that a built package ZIP is structurally correct and contains required content.
+## Goal
+Before running the Azure test, you can validate an already built ZIP locally with the GuestConfiguration module.
 
-It does **not** require Azure Machine Configuration or Azure Policy.
-
-## 1. Build the package first
-
-Example:
-
-```powershell
-cd .\packages\win-server-ACCT-001
-.\build.ps1
-```
-
-## 2. Validate the ZIP locally
-
-From repo root:
-
-```powershell
-.\scripts\test-all-packages.ps1
-```
-
-This uses:
-
-`Get-GuestConfigurationPackageComplianceStatus`
-
-to check the ZIP content.
-
-## 3. Validate a single ZIP manually
-
-Locate the ZIP (based on `OutputPaths.PackageZipOutputRoot`):
-
+## Test one package
 Example path:
-`output\zip\win-server-ACCT-001\win-server-ACCT-001.zip`
-
-Then run:
 
 ```powershell
-Get-GuestConfigurationPackageComplianceStatus -Path .\output\zip\win-server-ACCT-001\win-server-ACCT-001.zip |
-  Select-Object PackageName, Version, Status, Reasons | Format-List
+Get-GuestConfigurationPackageComplianceStatus -Path ./output/zip/ACCT-001/win-server-ACCT-001.zip
 ```
 
-## Troubleshooting
+## Test all packages
+```powershell
+pwsh ./scripts/test-all-packages.ps1
+```
 
-- If the cmdlet is missing: install modules via `authoring-workstation\install-required-modules.ps1`.
-- If the ZIP is missing: run the relevant `build.ps1` again (or `scripts\build-all.ps1`).
+## Expected result
+- ZIP file exists
+- package structure is valid
+- no parser or validation errors are reported by the GuestConfiguration module
+
+## Note
+Local package validation does not replace Azure-side verification. The functional check must still be completed on the target VM:
+- assignment exists
+- agent / Guest Configuration log is plausible
+- Windows target setting matches the expected state

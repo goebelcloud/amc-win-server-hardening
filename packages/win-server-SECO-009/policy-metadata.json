@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-009",
+  "baseControlId": "SECO-015",
+  "definitionName": "win-server-SECO-009",
+  "displayNameSuffix": "Interactive logon: Do not require CTRL+ALT+DEL (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Interactive logon: Do not require CTRL+ALT+DEL = Disabled (require CTRL+ALT+DEL).",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-009",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-009.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-009.zip",
+  "packageZipRelativePath": "output/zip/SECO-009/win-server-SECO-009.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

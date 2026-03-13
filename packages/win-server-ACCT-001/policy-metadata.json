@@ -1,0 +1,17 @@
+{
+  "controlId": "ACCT-001",
+  "baseControlId": "ACCT-001",
+  "definitionName": "win-server-ACCT-001",
+  "displayNameSuffix": "Enforce password history (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Account Policies\\Password Policy -> Enforce password history = 24 passwords remembered.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-ACCT-001",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-ACCT-001.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-ACCT-001.zip",
+  "packageZipRelativePath": "output/zip/ACCT-001/win-server-ACCT-001.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

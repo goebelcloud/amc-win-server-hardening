@@ -1,184 +1,270 @@
 <#
 .SYNOPSIS
-  Hydrate policy JSON for this package (enhanced + non-enhanced) (win-server-SECO-002).
+  Hydrate standard and enhanced policy definitions for this package.
 
 .DESCRIPTION
-  Reads templates under:
-    - policy/deployIfNotExists.enhanced.sample.json
-    - policy/deployIfNotExists.json
-  Replaces placeholders:
-    - __CONTENT_URI__  -> <ContentUriBase>/<ControlId>.zip
-    - __CONTENT_HASH__ -> SHA256 of the built package ZIP
-    - __UAMI_RESOURCE_ID__ -> required UAMI resource ID
+  This script reads package-local metadata plus the central policy templates and renders:
+    - deployIfNotExists.json
+    - deployIfNotExists.enhanced.json
 
-  The hydrated policy is written to the configured policy output folder (never into the package folder):
-    OutputPaths.PolicyOutputRoot/<ControlId>/deployIfNotExists.enhanced.json
-    OutputPaths.PolicyOutputRoot/<ControlId>/deployIfNotExists.json
+  The only Azure Policy parameters remain:
+    - effect
+    - assignmentType
+    - requiredUserAssignedIdentityResourceId (enhanced only)
 
-  Defaults are read from:
-    packages/machine-configuration.config.json
-
-.NOTES
-  File: hydrate-policy.ps1
-  Package: win-server-SECO-002 - Accounts: Guest account status
-  Purpose: Hydrates Azure Policy JSON templates (enhanced + non-enhanced) for the setting "Accounts: Guest account status" (win-server-SECO-002).
-  Version: 1.0.0
+  Package artifact values such as contentUri and contentHash are synchronized into
+  policy-metadata.json first and then injected into the rendered policies.
 #>
 
 [CmdletBinding()]
 param(
-  # Optional override. If not specified, the script searches upwards for packages/machine-configuration.config.json
+  [Parameter()]
   [string]$ConfigPath,
 
-  # Optional overrides (defaults come from packages/machine-configuration.config.json)
+  [Parameter()]
   [string]$ContentUriBase,
+
+  [Parameter()]
   [string]$RequiredUamiResourceId
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-function Find-RepositoryConfig {
-  param([string]$StartDirectory)
+function Find-PackageHelperScript {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string]$StartDirectory
+  )
 
-  $current = Resolve-Path $StartDirectory
+  $currentDirectory = Resolve-Path -Path $StartDirectory
   while ($true) {
-    $candidate = Join-Path $current "machine-configuration.config.json"
-    if (Test-Path $candidate) { return $candidate }
+    $directCandidate = Join-Path -Path $currentDirectory -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $directCandidate) {
+      return $directCandidate
+    }
 
-    $parent = Split-Path $current -Parent
-    if ($parent -eq $current) { break }
-    $current = $parent
+    $packagesCandidate = Join-Path -Path (Join-Path -Path $currentDirectory -ChildPath 'packages') -ChildPath 'package-metadata.helpers.ps1'
+    if (Test-Path -Path $packagesCandidate) {
+      return $packagesCandidate
+    }
+
+    $parentDirectory = Split-Path -Path $currentDirectory -Parent
+    if ($parentDirectory -eq $currentDirectory) { break }
+    $currentDirectory = $parentDirectory
   }
 
-  throw "Could not find packages/machine-configuration.config.json by searching up from: $StartDirectory"
+  throw 'Could not find packages/package-metadata.helpers.ps1.'
 }
 
+# Recursively replace placeholder tokens inside JSON template objects.
+function Resolve-TemplateObject {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    $InputObject,
+
+    [Parameter(Mandatory)]
+    [hashtable]$Replacements
+  )
+
+  if ($null -eq $InputObject) { return $null }
+
+  if ($InputObject -is [string]) {
+    if ($Replacements.ContainsKey($InputObject)) {
+      return $Replacements[$InputObject]
+    }
+
+    return $InputObject
+  }
+
+  if ($InputObject -is [System.Collections.IDictionary]) {
+    $resolvedMap = [ordered]@{}
+    foreach ($key in $InputObject.Keys) {
+      $resolvedMap[$key] = Resolve-TemplateObject -InputObject $InputObject[$key] -Replacements $Replacements
+    }
+    return $resolvedMap
+  }
+
+  if (($InputObject -is [System.Collections.IEnumerable]) -and -not ($InputObject -is [string])) {
+    $resolvedItems = @()
+    foreach ($item in $InputObject) {
+      $resolvedItems += ,(Resolve-TemplateObject -InputObject $item -Replacements $Replacements)
+    }
+    return $resolvedItems
+  }
+
+  if ($InputObject.PSObject -and $InputObject.PSObject.Properties.Count -gt 0) {
+    $resolvedObject = [ordered]@{}
+    foreach ($property in $InputObject.PSObject.Properties) {
+      $resolvedObject[$property.Name] = Resolve-TemplateObject -InputObject $property.Value -Replacements $Replacements
+    }
+    return [pscustomobject]$resolvedObject
+  }
+
+  return $InputObject
+}
+
+# Render one template file to a concrete JSON document and validate the JSON before writing it.
+function Render-TemplateFile {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string]$TemplatePath,
+
+    [Parameter(Mandatory)]
+    [hashtable]$Replacements,
+
+    [Parameter(Mandatory)]
+    [string]$OutputPath
+  )
+
+  $templateObject = Get-Content -Path $TemplatePath -Raw | ConvertFrom-Json -Depth 100
+  $resolvedObject = Resolve-TemplateObject -InputObject $templateObject -Replacements $Replacements
+  $jsonText = $resolvedObject | ConvertTo-Json -Depth 100
+
+  $null = $jsonText | ConvertFrom-Json -Depth 100
+  Set-Content -Path $OutputPath -Value $jsonText -Encoding UTF8
+}
+
+# Resolve the package root and import shared helpers.
 $packageRoot = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
-$packageFolderName = Split-Path -Leaf $packageRoot
+$helperPath = Find-PackageHelperScript -StartDirectory $packageRoot
+. $helperPath
 
-# ControlId used for packaging, ZIP naming, and contentUri is taken directly from the folder name prefix.
-# Example: "win-server-ACCT-001"
-$controlId = ($packageFolderName -split "__")[0]
+$packageName = Split-Path -Path $packageRoot -Leaf
+$metadataPath = Join-Path -Path $packageRoot -ChildPath 'policy-metadata.json'
+if (-not (Test-Path -Path $metadataPath)) {
+  throw ('policy-metadata.json not found: {0}' -f $metadataPath)
+}
 
+# Resolve central configuration and refresh metadata before rendering templates.
 if (-not $ConfigPath) {
   $ConfigPath = Find-RepositoryConfig -StartDirectory $packageRoot
 }
 
-$config = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
-
-# BaseControlId is used ONLY for the Azure Policy displayName (human readable).
-$baseControlIdMatch = [regex]::Match($controlId, "([A-Z]{2,6}-\d{3})$")
-$baseControlId = if ($baseControlIdMatch.Success) { $baseControlIdMatch.Groups[1].Value } else { $controlId }
-$policyDisplayPrefix = $config.ControlIdPolicyPrefix
-$policyDisplayId = if ($policyDisplayPrefix) { $policyDisplayPrefix + $baseControlId } else { $controlId }
-# Setting metadata (used for readable policy displayName/description)
-$settingTitle = "Accounts: Guest account status"
-$settingPath  = "Local Policies\Security Options"
-$settingSuggestedValue = "Disabled"
-
-
-
-
-# Detailed hydration steps for win-server-SECO-002 (Accounts: Guest account status):
-#   1) Locate the built package ZIP in the configured PackageZipOutputRoot and calculate SHA256 (contentHash).
-#   2) Build the contentUri: <ContentUriBase>/win-server-SECO-002.zip
-#   3) Replace placeholders in policy/deployIfNotExists.enhanced.sample.json:
-#        __CONTENT_URI__      -> resolved contentUri
-#        __CONTENT_HASH__     -> computed SHA256 hash
-#        __UAMI_RESOURCE_ID__ -> RequiredUamiResourceId (used by Machine Configuration to download the ZIP from storage)
-#   4) Write the hydrated enhanced policy JSON to the configured PolicyOutputRoot (never into the package folder).
-#   5) Azure Policy parameters (effect, assignmentType, requiredUserAssignedIdentityResourceId) remain parameters so Terraform can set them at assignment time.
-if (-not $ContentUriBase) { $ContentUriBase = $config.ContentUriBase }
-if (-not $RequiredUamiResourceId) { $RequiredUamiResourceId = $config.RequiredUamiResourceId }
-
-if (-not $ContentUriBase -or $ContentUriBase -like "*<storageaccount>*") {
-  throw "ContentUriBase is not set. Update packages/machine-configuration.config.json (ContentUriBase) or pass -ContentUriBase."
-}
-
-if (-not $RequiredUamiResourceId -or $RequiredUamiResourceId -like "*/subscriptions/<sub>*") {
-  throw "RequiredUamiResourceId is not set. Update packages/machine-configuration.config.json (RequiredUamiResourceId) or pass -RequiredUamiResourceId."
-}
-
+$config = Read-JsonFileOrdered -Path $ConfigPath
 if (-not $config.OutputPaths) {
-  throw "OutputPaths missing in packages/machine-configuration.config.json."
+  throw 'OutputPaths missing in packages/machine-configuration.config.json.'
 }
 
-# Derive repo root from config location: <repoRoot>\packages\machine-configuration.config.json
-$repoRoot = Split-Path -Path (Split-Path -Path $ConfigPath -Parent) -Parent
+$null = Sync-PackageMetadata -PackageRoot $packageRoot -ConfigPath $ConfigPath -ContentUriBaseOverride $ContentUriBase
+$metadata = Read-JsonFileOrdered -Path $metadataPath
+$artifactInfo = Get-PackageArtifactInfo -PackageRoot $packageRoot -ConfigPath $ConfigPath -ContentUriBaseOverride $ContentUriBase
 
-$packageZipOutputRoot = Join-Path $repoRoot $config.OutputPaths.PackageZipOutputRoot
-$policyOutputRoot     = Join-Path $repoRoot $config.OutputPaths.PolicyOutputRoot
-
-$perPackageMode = $config.OutputPaths.PerPackageOutputMode
-if (-not $perPackageMode) { $perPackageMode = "byControlId" }
-
-switch ($perPackageMode) {
-  "byPackageFolder" { $outFolder = $packageFolderName }
-  default           { $outFolder = $controlId }
+if (-not $ContentUriBase) {
+  $ContentUriBase = [string]$config.ContentUriBase
+}
+if (-not $RequiredUamiResourceId) {
+  $RequiredUamiResourceId = [string]$config.RequiredUamiResourceId
 }
 
-$expectedZipPath = Join-Path (Join-Path $packageZipOutputRoot $outFolder) ("{0}.zip" -f $controlId)
-if (-not (Test-Path $expectedZipPath)) {
-  throw ("Package ZIP not found: {0}. Build the package first." -f $expectedZipPath)
+# Fail fast when required runtime inputs are still placeholders.
+if (-not $ContentUriBase -or $ContentUriBase -like '*<storageaccount>*') {
+  throw 'ContentUriBase is not set. Update packages/machine-configuration.config.json or pass -ContentUriBase.'
+}
+if (-not $RequiredUamiResourceId -or $RequiredUamiResourceId -like '*/subscriptions/<sub>*') {
+  throw 'RequiredUamiResourceId is not set. Update packages/machine-configuration.config.json or pass -RequiredUamiResourceId.'
+}
+if (-not $artifactInfo.artifactPresent) {
+  throw ('Package ZIP not found. Build the package first: {0}' -f $artifactInfo.zipPath)
 }
 
-$hash = (Get-FileHash -Path $expectedZipPath -Algorithm SHA256).Hash.ToLowerInvariant()
-$contentUri = ("{0}/{1}.zip" -f $ContentUriBase.TrimEnd("/"), $controlId)
+# Resolve output folders and template locations.
+$repositoryRoot = Split-Path -Path (Split-Path -Path $ConfigPath -Parent) -Parent
+$policyRoot = Join-Path -Path $repositoryRoot -ChildPath $config.OutputPaths.PolicyOutputRoot
+$templateRoot = Join-Path -Path $repositoryRoot -ChildPath 'policy-templates'
 
-$templatePath = Join-Path $packageRoot "policy\deployIfNotExists.enhanced.sample.json"
-if (-not (Test-Path $templatePath)) {
-  throw ("Policy template not found: {0}" -f $templatePath)
+$perPackageOutputMode = [string]$config.OutputPaths.PerPackageOutputMode
+if (-not $perPackageOutputMode) {
+  $perPackageOutputMode = 'byControlId'
+}
+$outputFolderName = if ($perPackageOutputMode -eq 'byPackageFolder') { $packageName } else { [string]$metadata.controlId }
+
+$policyOutputPath = Join-Path -Path $policyRoot -ChildPath $outputFolderName
+New-Item -ItemType Directory -Path $policyOutputPath -Force | Out-Null
+
+$contentUri = [string]$metadata.contentUri
+if (-not $contentUri) {
+  $contentUri = [string]$artifactInfo.contentUri
+}
+$contentHash = [string]$metadata.contentHash
+if (-not $contentHash) {
+  $contentHash = [string]$artifactInfo.contentHash
 }
 
-$templateJson = Get-Content -Path $templatePath -Raw
-$templateJson = $templateJson.Replace("__CONTENT_URI__", $contentUri)
-$templateJson = $templateJson.Replace("__CONTENT_HASH__", $hash)
-$templateJson = $templateJson.Replace("__UAMI_RESOURCE_ID__", $RequiredUamiResourceId)
-
-$outPolicyFolder = Join-Path $policyOutputRoot $outFolder
-New-Item -Path $outPolicyFolder -ItemType Directory -Force | Out-Null
-
-$outPath = Join-Path $outPolicyFolder "deployIfNotExists.enhanced.json"
-$outPortalPath = ($outPath -replace "\.json$", ".portal.json")
-
-# Azure Portal note:
-# - When you paste JSON into the Portal "JSON" editor for a policy definition, the Portal expects the *properties object*
-#   (displayName/mode/metadata/parameters/policyRule) and wraps it in "properties" itself.
-# - Therefore we emit a second file without the outer { "properties": { ... } } wrapper.
-$templateObject = $templateJson | ConvertFrom-Json -Depth 50
-$templateObject.properties.displayName = ("{0} - {1} (Machine Configuration)" -f $policyDisplayId, $settingTitle)
-($templateObject | ConvertTo-Json -Depth 50) | Set-Content -Path $outPath -Encoding UTF8
-($templateObject.properties | ConvertTo-Json -Depth 50) | Set-Content -Path $outPortalPath -Encoding UTF8
-
-# --- Non-enhanced policy hydration (deployIfNotExists.json) ---
-# This variant removes the additional prerequisite gates used in the enhanced sample policy.
-# Use this when you want Azure Policy to deploy the Guest Configuration assignment without
-# requiring identity/UAMI checks in the policy 'if' clause (prereqs can be enforced separately).
-$baseTemplatePath = Join-Path $packageRoot "policy\deployIfNotExists.json"
-if (-not (Test-Path $baseTemplatePath)) {
-  throw ("Policy template not found: {0}" -f $baseTemplatePath)
+# Build the display names and policy names from metadata and central config.
+$policyDisplayPrefix = [string]$config.PolicyDisplayPrefix
+$displayNameBase = if ($policyDisplayPrefix) {
+  '{0}{1} - {2}' -f $policyDisplayPrefix, $metadata.controlId, $metadata.displayNameSuffix
+}
+else {
+  '{0} - {1}' -f $metadata.controlId, $metadata.displayNameSuffix
 }
 
-$baseTemplateJson = Get-Content -Path $baseTemplatePath -Raw
-$baseTemplateJson = $baseTemplateJson.Replace("__CONTENT_URI__", $contentUri)
-$baseTemplateJson = $baseTemplateJson.Replace("__CONTENT_HASH__", $hash)
-$baseTemplateJson = $baseTemplateJson.Replace("__UAMI_RESOURCE_ID__", $RequiredUamiResourceId)
+$standardPolicyName = [string]$metadata.definitionName
+$enhancedPolicyName = '{0}-enhanced' -f $metadata.definitionName
+$assignmentNameExpression = "[concat('{0}`$pid', uniqueString(policy().assignmentId, policy().definitionReferenceId))]" -f $metadata.guestConfigurationName
 
-$outBasePath = Join-Path $outPolicyFolder "deployIfNotExists.json"
-$outBasePortalPath = ($outBasePath -replace "\.json$", ".portal.json")
+# Convert package-local special values into the configuration-parameter structures expected by the templates.
+$metadataConfigurationParameters = @{}
+$deploymentConfigurationParameters = @()
+if ($metadata.packageParameters) {
+  foreach ($parameterEntry in $metadata.packageParameters.GetEnumerator()) {
+    $parameterName = [string]$parameterEntry.Key
+    $parameterValue = $parameterEntry.Value
+    if ($parameterValue.configurationParameterSelector) {
+      $metadataConfigurationParameters[$parameterName] = [string]$parameterValue.configurationParameterSelector
+      $deploymentConfigurationParameters += @{
+        name  = [string]$parameterValue.configurationParameterSelector
+        value = [string]$parameterValue.defaultValue
+      }
+    }
+  }
+}
 
-$baseTemplateObject = $baseTemplateJson | ConvertFrom-Json -Depth 50
-$baseTemplateObject.properties.displayName = ("{0} - {1} (Machine Configuration)" -f $policyDisplayId, $settingTitle)
-($baseTemplateObject | ConvertTo-Json -Depth 50) | Set-Content -Path $outBasePath -Encoding UTF8
-($baseTemplateObject.properties | ConvertTo-Json -Depth 50) | Set-Content -Path $outBasePortalPath -Encoding UTF8
+$templateReplacementsCommon = @{
+  '__POLICY_NAME__'                     = [string]$standardPolicyName
+  '__DISPLAY_NAME__'                   = [string]$displayNameBase
+  '__DESCRIPTION__'                    = [string]$metadata.descriptionText
+  '__CONTROL_ID__'                     = [string]$metadata.controlId
+  '__BASE_CONTROL_ID__'                = [string]$metadata.baseControlId
+  '__GUEST_CONFIGURATION_NAME__'       = [string]$metadata.guestConfigurationName
+  '__ASSIGNMENT_TYPE_DEFAULT__'        = [string]$metadata.assignmentTypeDefault
+  '__CONTENT_URI__'                    = [string]$contentUri
+  '__CONTENT_HASH__'                   = [string]$contentHash
+  '__CONTENT_MANAGED_IDENTITY__'       = [string]$RequiredUamiResourceId
+  '__METADATA_CONFIGURATION_PARAMETERS__'   = $metadataConfigurationParameters
+  '__DEPLOYMENT_CONFIGURATION_PARAMETERS__' = $deploymentConfigurationParameters
+  '__ASSIGNMENT_NAME_EXPRESSION__'     = [string]$assignmentNameExpression
+  '__REQUIRED_UAMI_DEFAULT__'          = [string]$RequiredUamiResourceId
+}
 
+$standardTemplatePath = Join-Path -Path $templateRoot -ChildPath 'deployIfNotExists.template.json'
+$enhancedTemplatePath = Join-Path -Path $templateRoot -ChildPath 'deployIfNotExists.enhanced.template.json'
 
-Write-Host "Hydrated policies written:" -ForegroundColor Green
-Write-Host ("  Enhanced JSON:       {0}" -f $outPath)
-Write-Host ("  Enhanced Portal:     {0}" -f $outPortalPath)
-Write-Host ("  Non-enhanced JSON:   {0}" -f $outBasePath)
-Write-Host ("  Non-enhanced Portal: {0}" -f $outBasePortalPath)
-Write-Host ("contentUri:  {0}" -f $contentUri)
-Write-Host ("contentHash: {0}" -f $hash)
-Write-Host ("required UAMI: {0}" -f $RequiredUamiResourceId)
+$standardReplacements = @{}
+$templateReplacementsCommon.Keys | ForEach-Object { $standardReplacements[$_] = $templateReplacementsCommon[$_] }
+
+$enhancedReplacements = @{}
+$templateReplacementsCommon.Keys | ForEach-Object { $enhancedReplacements[$_] = $templateReplacementsCommon[$_] }
+$enhancedReplacements['__POLICY_NAME__'] = [string]$enhancedPolicyName
+$enhancedReplacements['__DISPLAY_NAME__'] = '{0} (enhanced)' -f $displayNameBase
+
+# Render both supported policy variants.
+Render-TemplateFile `
+  -TemplatePath $standardTemplatePath `
+  -Replacements $standardReplacements `
+  -OutputPath (Join-Path -Path $policyOutputPath -ChildPath 'deployIfNotExists.json')
+
+Render-TemplateFile `
+  -TemplatePath $enhancedTemplatePath `
+  -Replacements $enhancedReplacements `
+  -OutputPath (Join-Path -Path $policyOutputPath -ChildPath 'deployIfNotExists.enhanced.json')
+
+# Refresh the runtime catalog after rendering.
+$catalogPath = Update-PackageCatalog -ConfigPath $ConfigPath
+Write-Host -Object ('Hydrated policy definitions for {0}' -f $packageName) -ForegroundColor Green
+Write-Host -Object ('Updated package metadata: {0}' -f $metadataPath) -ForegroundColor Green
+Write-Host -Object ('Updated package catalog: {0}' -f $catalogPath) -ForegroundColor Green

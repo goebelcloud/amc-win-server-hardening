@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-004",
+  "baseControlId": "SECO-006",
+  "definitionName": "win-server-SECO-004",
+  "displayNameSuffix": "Network access: Do not allow anonymous enumeration of SAM accounts and shares (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Network access: Do not allow anonymous enumeration of SAM accounts and shares = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-004",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-004.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-004.zip",
+  "packageZipRelativePath": "output/zip/SECO-004/win-server-SECO-004.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

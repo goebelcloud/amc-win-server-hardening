@@ -1,0 +1,17 @@
+{
+  "controlId": "DEF-002",
+  "baseControlId": "DEF-002",
+  "definitionName": "win-server-DEF-002",
+  "displayNameSuffix": "Cloud-delivered protection (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Windows Components\\Microsoft Defender Antivirus -> Cloud-delivered protection = Enabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-DEF-002",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-DEF-002.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-DEF-002.zip",
+  "packageZipRelativePath": "output/zip/DEF-002/win-server-DEF-002.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

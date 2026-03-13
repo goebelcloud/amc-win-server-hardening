@@ -1,0 +1,17 @@
+{
+  "controlId": "SECO-005",
+  "baseControlId": "SECO-007",
+  "definitionName": "win-server-SECO-005",
+  "displayNameSuffix": "Network access: Let Everyone permissions apply to anonymous users (Machine Configuration)",
+  "descriptionText": "Applies Windows Server hardening setting: Local Policies\\Security Options -> Network access: Let Everyone permissions apply to anonymous users = Disabled.",
+  "assignmentTypeDefault": "ApplyAndAutoCorrect",
+  "guestConfigurationName": "win-server-SECO-005",
+  "packageParameters": {},
+  "contentUri": "https://<storageaccount>.blob.core.windows.net/<container>/win-server-SECO-005.zip",
+  "contentHash": "",
+  "contentHashAlgorithm": "SHA256",
+  "packageZipFileName": "win-server-SECO-005.zip",
+  "packageZipRelativePath": "output/zip/SECO-005/win-server-SECO-005.zip",
+  "artifactPresent": false,
+  "artifactSyncUtc": "2026-03-12T09:44:04Z"
+}

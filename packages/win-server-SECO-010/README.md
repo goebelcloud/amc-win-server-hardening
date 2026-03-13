@@ -1,78 +1,73 @@
-# win-server-SECO-010 — Network security: Minimum session security for NTLM SSP based (including secure RPC) clients
+# win-server-SECO-010 — Interactive logon: Machine inactivity limit
 
-**Version:** 1.0.0  
-**Purpose:** Enforce the following setting via Azure Machine Configuration (DSC).  
 - **Setting path:** `Local Policies\Security Options`
-- **Setting:** `Network security: Minimum session security for NTLM SSP based (including secure RPC) clients`
-- **Suggested value:** `Require NTLMv2 session security; Require 128-bit encryption`
-- **Impact:** `Low`
+- **Suggested value:** `900 seconds (15 minutes)`
+- **Default assignmentType:** `ApplyAndAutoCorrect`
 
-## Why this matters
-Hardens NTLM session protection (signing/encryption) to reduce MITM and downgrade risk.
+## Checklist
 
-## What this package changes
-- Registry: `HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0\NtlmMinClientSec` (DWord) = `537395200`
-
-## How to verify the setting is applied (built-in OS tools)
-
-### GUI verification
-1. Press **Win+R**, run `secpol.msc` (Local Security Policy).
-2. Navigate to: **Local Policies > Security Options**.
-3. Open **Network security: Minimum session security for NTLM SSP based (including secure RPC) clients** and confirm it is set to **Require NTLMv2 session security; Require 128-bit encryption**.
-
-### Command-line verification
-**Registry check (PowerShell / reg.exe)**
-```cmd
-reg query "HKLM\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" /v NtlmMinClientSec
-```
-Expected: `NtlmMinClientSec` (DWord) = `537395200`.
-
-## Machine Configuration prerequisites (expected on target VMs)
-These packages assume the VM is prepared for Azure Machine Configuration:
-- **System-assigned managed identity enabled**  
-- **Machine Configuration extension** installed: Publisher `Microsoft.GuestConfiguration`, Type `ConfigurationforWindows`, Name `AzurePolicyforWindows`  
-- **Required user-assigned managed identity (UAMI)** attached to the VM (used via `contentManagedIdentity`)
-
-## DSC configuration
-- Configuration name: `SECO_010_Network_security_Minimum_session_security_for_NTLM_`
-- Source file: `Configuration.ps1`
-
-## Build this package (standalone)
-From this package directory:
+### 1. Build
 ```powershell
-.\build.ps1
+pwsh ./build.ps1
 ```
 
-## Hydrate the enhanced policy JSON for this package
-After uploading the built ZIP and setting `ContentUriBase` + `RequiredUamiResourceId` in `packages/machine-configuration.config.json`:
+Expected:
+- `output/mof/SECO-010/localhost.mof`
+- `output/zip/SECO-010/win-server-SECO-010.zip`
+
+### 2. Hydrate
+Upload the ZIP to Blob Storage. Then:
 ```powershell
-.\hydrate-policy.ps1
+pwsh ./hydrate-policy.ps1
 ```
 
-## Policy files included
-- `policy/deployIfNotExists.json` — baseline policy template
-- `policy/deployIfNotExists.enhanced.sample.json` — enhanced sample with prerequisite checks + UAMI requirement + Windows Server offer/SKU scope
+Expected:
+- `output/policy/SECO-010/deployIfNotExists.json`
+- `output/policy/SECO-010/deployIfNotExists.enhanced.json`
 
-## CIS / benchmarks reference
-WS2016:
-CIS Microsoft Windows Server 2016 Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
-CIS Microsoft Windows Server 2016 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
-WS2019:
-CIS Microsoft Windows Server 2019 STIG Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
-WS2022:
-CIS Microsoft Windows Server 2022 Benchmark v4.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
-CIS Microsoft Windows Server 2022 STIG Benchmark v3.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
-WS2025:
-CIS Microsoft Windows Server 2025 Stand-alone v1.0.0 — Topic area: Security Options; search for: "Network security: Minimum session security for NTLM SSP based (including secure RPC) clients".
+### 3. Import policy
+- Import exactly one of the two hydrated definitions.
+- `deployIfNotExists.json` = standard / non-enhanced
+- `deployIfNotExists.enhanced.json` = enhanced
+- Do not use `*.portal.json`.
 
-**CIS chapter IDs:** TBD (see CIS PDFs / CIS STIG docs)
+### 4. Create assignment
+- `effect = DeployIfNotExists`
+- `assignmentType = ApplyAndAutoCorrect` (for pilot phases, use `Audit` or `ApplyAndMonitor` if needed)
+- Enhanced only: `requiredUserAssignedIdentityResourceId`
 
-## Sources
-- MS baseline mapping (Windows Server 2016/2019/2022):
-  Azure Policy guest configuration baseline for Windows (Server 2016/2019/2022) — search for: Network security: Minimum session security for NTLM SSP based (including secure RPC) clients
-- MS baseline mapping (Windows Server 2025):
-  Azure Policy guest configuration baseline for Windows Server 2025 — search for: Network security: Minimum session security for NTLM SSP based (including secure RPC) clients
-- Machine Configuration package authoring (`New-GuestConfigurationPackage`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/develop-custom-package/2-create-package
-- Machine Configuration policy authoring (`New-GuestConfigurationPolicy`):
-  https://learn.microsoft.com/en-us/azure/governance/machine-configuration/how-to/create-policy-definition
+### 5. Verify on the VM
+
+#### Guest Configuration Assignment
+Portal: check **VM > Guest configuration assignments**.
+
+```bash
+az resource list --resource-group <rg> --namespace Microsoft.Compute --resource-type "virtualMachines/providers/guestConfigurationAssignments" --query "[?contains(id, '/virtualMachines/<vmName>/')].[name, properties.guestConfiguration.name, properties.complianceStatus]" -o table
+```
+
+Expected:
+- An assignment for `win-server-SECO-010` exists.
+- `properties.guestConfiguration.name = win-server-SECO-010`
+- With `ApplyAndMonitor` / `ApplyAndAutoCorrect`, the VM becomes `Compliant` after successful evaluation.
+- With `Audit`, the VM is `NonCompliant` when the evaluated deviation is detected.
+
+#### Agent / Guest Configuration log
+```powershell
+$logs = Get-ChildItem -Path 'C:\ProgramData\GuestConfig' -Recurse -File -ErrorAction SilentlyContinue |
+  Sort-Object LastWriteTime -Descending
+$logs | Select-Object -First 20 FullName, LastWriteTime
+Get-Content -Path $logs[0].FullName -Tail 200
+```
+
+Expected:
+- recent entries for `win-server-SECO-010`
+- no recurring persistent errors
+
+#### Target setting
+GUI: open `secpol.msc` and navigate to `Local Policies > Security Options`.
+
+```powershell
+Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' | Select-Object InactivityTimeoutSecs
+```
+
+Expected target value: InactivityTimeoutSecs = 900 (900 seconds (15 minutes))
